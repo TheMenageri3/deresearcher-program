@@ -1,4 +1,5 @@
 use borsh::{BorshDeserialize, BorshSerialize};
+use shank::ShankAccount;
 use solana_program::pubkey::Pubkey;
 
 #[derive(Debug, BorshDeserialize, BorshSerialize, PartialEq, PartialOrd)]
@@ -11,6 +12,31 @@ pub enum PaperState {
     Minted,
 }
 
+#[derive(Debug, BorshDeserialize, BorshSerialize, PartialEq, PartialOrd)]
+pub enum ResearcherProfileState {
+    AwaitingApproval,
+    Approved,
+    Rejected,
+}
+
+#[derive(Debug, BorshDeserialize, BorshSerialize, ShankAccount)]
+pub struct ResearcherProfile {
+    pub address: Pubkey,                 // Researcher's public key 32 bytes
+    pub name: [u8; 32],                  // Researcher's name 32 bytes
+    pub state: ResearcherProfileState,   // Current state of the researcher 1 byte
+    pub total_papers_published: u64,     // Total papers published 8 bytes
+    pub total_citations: u64,            // Total citations 8 bytes
+    pub total_reviews: u64,              // Total reviews 8 bytes
+    pub reputation: u8,                  // Reputation score 8 bytes (out of 100)
+    pub meta_data_merkle_root: [u8; 64], // Data merkle root 64 bytes
+}
+
+impl ResearcherProfile {
+    pub fn size() -> usize {
+        std::mem::size_of::<Self>()
+    }
+}
+
 // pub struct MetaData {
 //     pub title: String,                      // Title of the research paper
 //     pub authors: Vec<(String, Pubkey)>,     // Authors and their public keys
@@ -20,7 +46,7 @@ pub enum PaperState {
 //     pub decentralized_storage_link: String, // Link to the PDF in decentralized storage
 // }
 
-#[derive(Debug, BorshDeserialize, BorshSerialize)]
+#[derive(Debug, BorshDeserialize, BorshSerialize, ShankAccount)]
 pub struct ResearchPaper {
     pub address: Pubkey,                 // Paper's public key 32 bytes
     pub creator_pubkey: Pubkey,          // Creator's public key 32 bytes
@@ -28,7 +54,8 @@ pub struct ResearchPaper {
     pub access_fee: u32,                 // Access fee for the paper 4 bytes
     pub version: u8,                     // Version of the paper 1 byte
     pub paper_content_hash: [u8; 64],    // Hash of the paper's content 32 bytes
-    pub totoal_approvals: u8,            // Total approvals 1 byte
+    pub total_approvals: u8,             // Total approvals 1 byte
+    pub total_citations: u64,            // Total citations 8 bytes
     pub meta_data_merkle_root: [u8; 64], // Data merkle root 64 bytes
 }
 
@@ -50,7 +77,7 @@ pub struct Review {
 //   review_comments:String
 //}
 
-#[derive(Debug, BorshDeserialize, BorshSerialize)]
+#[derive(Debug, BorshDeserialize, BorshSerialize, ShankAccount)]
 pub struct PeerReview {
     pub address: Pubkey,                 // Peer Review Entry's public key 32 bytes
     pub reviewer_pubkey: Pubkey,         // Reviewer's public key 32 bytes
@@ -65,7 +92,7 @@ impl PeerReview {
     }
 }
 
-#[derive(Debug, BorshDeserialize, BorshSerialize)]
+#[derive(Debug, BorshDeserialize, BorshSerialize, ShankAccount)]
 pub struct ReaderWhitelist {
     pub reader_pubkey: Pubkey,      // Reader's public key 32 bytes
     pub data_merkle_root: [u8; 64], // Data merkle root 64 bytes

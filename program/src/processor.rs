@@ -1,11 +1,11 @@
-use borsh::{BorshDeserialize, BorshSerialize};
+use borsh::BorshDeserialize;
 use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, pubkey::Pubkey};
 
 use crate::{
     error::DeResearcherError,
-    ix::{
-        add_peer_review_ix, create_researche_paper_ix, get_access_ix, publish_paper_ix,
-        DeResearcherInstruction,
+    instruction::{
+        add_peer_review_ix, create_research_paper_ix, create_researcher_profile_ix, get_access_ix,
+        publish_paper_ix, DeResearcherInstruction,
     },
 };
 
@@ -21,8 +21,11 @@ impl Processor {
             .map_err(|_| DeResearcherError::InvalidInstruction)?;
 
         match instruction {
+            DeResearcherInstruction::CreateResearcherProfile(data) => {
+                create_researcher_profile_ix(program_id, accounts, data)?;
+            }
             DeResearcherInstruction::CreateResearchePaper(data) => {
-                create_researche_paper_ix(program_id, accounts, data)?;
+                create_research_paper_ix(program_id, accounts, data)?;
             }
             DeResearcherInstruction::PublishPaper => publish_paper_ix(program_id, accounts)?,
             DeResearcherInstruction::AddPeerReview(data) => {

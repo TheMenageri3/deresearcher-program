@@ -1,5 +1,3 @@
-use std::error;
-
 use solana_program::{
     msg,
     program_error::{PrintProgramError, ProgramError},
@@ -24,6 +22,14 @@ pub enum DeResearcherError {
     PeerReviewAlreadyExists,
     #[error("Invalid Fee Receiver")]
     InvalidFeeReceiver,
+    #[error("Profile already exists")]
+    ResearcherProfileAlreadyExists,
+    #[error("Profile not found")]
+    ResearcherProfileNotFound,
+    #[error("Not allowed for peer review")]
+    NotAllowedForPeerReview,
+    #[error("Paper not found")]
+    PaperNotFound,
 }
 
 impl From<DeResearcherError> for ProgramError {
