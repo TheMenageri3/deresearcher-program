@@ -91,7 +91,7 @@ export class PeerReview implements PeerReviewArgs {
    */
   static gpaBuilder(
     programId: web3.PublicKey = new web3.PublicKey(
-      'P1SsZEQvb6gTPrdJQ5mu6oCyJCJhVKxFFnk9ztjsoEL'
+      'C5M2JxBaxmsW62BgujPXEPytw65igtUjr6mFbD5pmypM'
     )
   ) {
     return beetSolana.GpaBuilder.fromStruct(programId, peerReviewBeet)

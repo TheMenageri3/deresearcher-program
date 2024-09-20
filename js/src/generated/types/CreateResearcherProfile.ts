@@ -8,8 +8,6 @@
 import * as beet from '@metaplex-foundation/beet'
 export type CreateResearcherProfile = {
   name: string
-  email: string
-  reputation: number
 }
 
 /**
@@ -18,10 +16,6 @@ export type CreateResearcherProfile = {
  */
 export const createResearcherProfileBeet =
   new beet.FixableBeetArgsStruct<CreateResearcherProfile>(
-    [
-      ['name', beet.utf8String],
-      ['email', beet.utf8String],
-      ['reputation', beet.u8],
-    ],
+    [['name', beet.utf8String]],
     'CreateResearcherProfile'
   )

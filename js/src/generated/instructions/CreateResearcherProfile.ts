@@ -67,7 +67,7 @@ export const createResearcherProfileInstructionDiscriminator = 0;
 export function createCreateResearcherProfileInstruction(
   accounts: CreateResearcherProfileInstructionAccounts,
   args: CreateResearcherProfileInstructionArgs,
-  programId = new web3.PublicKey("P1SsZEQvb6gTPrdJQ5mu6oCyJCJhVKxFFnk9ztjsoEL")
+  programId = new web3.PublicKey("C5M2JxBaxmsW62BgujPXEPytw65igtUjr6mFbD5pmypM")
 ) {
   const [data] = CreateResearcherProfileStruct.serialize({
     instructionDiscriminator: createResearcherProfileInstructionDiscriminator,

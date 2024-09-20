@@ -1,3 +1,5 @@
+use std::vec;
+
 use borsh::{BorshDeserialize, BorshSerialize};
 use shank::ShankInstruction;
 use solana_program::{
@@ -14,29 +16,59 @@ use solana_program::{
 use crate::{
     error::DeResearcherError,
     state::{
-        PaperState, PeerReview, ReaderWhitelist, ResearchPaper, ResearcherProfile,
-        ResearcherProfileState, Review,
+        PeerReview, ReaderWhitelist, ResearchPaper, ResearcherProfile, ResearcherProfileState,
     },
 };
 
-const MIN_APPROVALS: u8 = 10;
+pub const MIN_APPROVALS: u8 = 10;
 
-const RESEARCH_PAPER_PDA_SEED: &[u8] = b"deres_research_paper";
-const PEER_REVIEW_PDA_SEED: &[u8] = b"deres_peer_review";
+const RESEARCH_PAPER_PDA_SEED: &[u8] = b"deres_paper";
+const PEER_REVIEW_PDA_SEED: &[u8] = b"deres_review";
 
 const WHITELIST_PDA_SEED: &[u8] = b"deres_whitelist";
 
-const RESEARCHER_PROFILE: &[u8] = b"deres_researcher_profile";
+const RESEARCHER_PROFILE_PDA_SEED: &[u8] = b"deres_profile";
 
 const _MAX_REPUTATION: u8 = 100;
 
 const _MIN_REPUTATION_FOR_PEER_REVIEW: u8 = 50;
 
+pub const MAX_STRING_SIZE: usize = 32;
+
+pub const ACCCOUNTS_DATA_OFFSET: usize = 6;
+
+pub const RUST_STRING_ADDR_OFFSET: usize = 6;
+
+pub fn validate_pda(
+    seeds: Vec<&[u8]>,
+    pda: &Pubkey,
+    bump: u8,
+    program_id: &Pubkey,
+) -> Result<(), DeResearcherError> {
+    let mut seeds_with_bump: Vec<&[u8]> = Vec::new();
+
+    for seed in seeds {
+        seeds_with_bump.push(seed);
+    }
+
+    let binding = [bump];
+
+    seeds_with_bump.push(&binding);
+
+    let actual_pda = Pubkey::create_program_address(&seeds_with_bump, program_id)
+        .map_err(|_| DeResearcherError::PdaPubekyMismatch)?;
+
+    if actual_pda.ne(pda) {
+        return Err(DeResearcherError::PdaPubekyMismatch.into());
+    }
+
+    Ok(())
+}
+
 #[derive(BorshSerialize, BorshDeserialize, Debug)]
 pub struct CreateResearcherProfile {
     pub name: String,
-    pub email: String,
-    pub reputation: u8,
+    pub pda_bump: u8,
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Debug)]
@@ -44,6 +76,12 @@ pub struct CreateResearchePaper {
     pub access_fee: u32,
     pub paper_content_hash: [u8; 64],
     pub meta_data_merkle_root: [u8; 64],
+    pub pda_bump: u8,
+}
+
+#[derive(BorshSerialize, BorshDeserialize, Debug)]
+pub struct PublishPaper {
+    pda_bump: u8,
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Debug)]
@@ -53,11 +91,13 @@ pub struct AddPeerReview {
     pub domain_knowledge: u8,
     pub practicality_of_result_obtained: u8,
     pub meta_data_merkle_root: [u8; 64],
+    pub pda_bump: u8,
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Debug)]
 pub struct GetAccessToPaper {
     pub meta_data_merkle_root: [u8; 64],
+    pub pda_bump: u8,
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Debug, ShankInstruction)]
@@ -106,7 +146,7 @@ pub enum DeResearcherInstruction {
         name = "paper_pda_acc",
         desc = "Research paper PDA account"
     )]
-    PublishPaper,
+    PublishPaper(PublishPaper),
     #[account(
         0,
         writable,
@@ -162,6 +202,25 @@ pub enum DeResearcherInstruction {
     GetAccessToPaper(GetAccessToPaper),
 }
 
+fn validate_create_researcher_profile_accounts(
+    researcher_acc: &AccountInfo,
+    researcher_profile_pda_acc: &AccountInfo,
+) -> Result<(), DeResearcherError> {
+    if !researcher_acc.is_signer {
+        return Err(DeResearcherError::InvalidSigner);
+    }
+
+    if !researcher_profile_pda_acc.data_is_empty() {
+        return Err(DeResearcherError::ResearcherProfileAlreadyExists);
+    }
+
+    if !researcher_profile_pda_acc.is_writable {
+        return Err(DeResearcherError::ImmutableAccount);
+    }
+
+    Ok(())
+}
+
 pub fn create_researcher_profile_ix(
     program_id: &Pubkey,
     accounts: &[AccountInfo],
@@ -171,17 +230,17 @@ pub fn create_researcher_profile_ix(
     let accounts_iter = &mut accounts.iter();
     let researcher_acc = next_account_info(accounts_iter)?;
     let researcher_profile_pda_acc = next_account_info(accounts_iter)?;
-    if !researcher_acc.is_signer {
-        return Err(DeResearcherError::InvalidSigner.into());
-    }
+    let system_program_acc = next_account_info(accounts_iter)?;
 
-    if !researcher_profile_pda_acc.data_is_empty() {
-        return Err(DeResearcherError::ResearcherProfileAlreadyExists.into());
-    }
+    let researcher_profile_pda = researcher_profile_pda_acc.key;
+
+    let seeds: Vec<&[u8]> = vec![RESEARCHER_PROFILE_PDA_SEED, researcher_acc.key.as_ref()];
+
+    validate_pda(seeds, researcher_profile_pda, data.pda_bump, program_id)?;
+
+    validate_create_researcher_profile_accounts(researcher_acc, researcher_profile_pda_acc)?;
 
     let rent = Rent::get()?;
-
-    let system_program_acc = next_account_info(accounts_iter)?;
 
     let rent_exempt = rent.minimum_balance(ResearchPaper::size());
 
@@ -193,16 +252,6 @@ pub fn create_researcher_profile_ix(
         program_id,
     );
 
-    let seeds: Vec<&[u8]> = vec![RESEARCHER_PROFILE, researcher_acc.key.as_ref()];
-
-    let seeds_ref = seeds.as_ref();
-
-    let (researcher_profile_pda, bump) = Pubkey::find_program_address(seeds_ref, program_id);
-
-    if researcher_profile_pda.ne(researcher_profile_pda_acc.key) {
-        return Err(DeResearcherError::PubkeyMismatch.into());
-    }
-
     invoke_signed(
         &create_researcher_profile_ix,
         &[
@@ -210,27 +259,34 @@ pub fn create_researcher_profile_ix(
             researcher_profile_pda_acc.clone(),
             system_program_acc.clone(),
         ],
-        &[seeds_ref, &[&[bump]]],
+        &[&[
+            RESEARCHER_PROFILE_PDA_SEED,
+            researcher_acc.key.as_ref(),
+            &[data.pda_bump],
+        ]],
     )?;
 
-    let researcher_profile = ResearcherProfile {
-        address: *researcher_profile_pda_acc.key,
-        name: data.name.as_bytes().try_into().unwrap(),
-        state: ResearcherProfileState::AwaitingApproval,
-        total_papers_published: 0,
-        total_citations: 0,
-        total_reviews: 0,
-        reputation: data.reputation,
-        meta_data_merkle_root: [0; 64],
-    };
+    ResearcherProfile::create_new(researcher_profile_pda_acc, data)?;
 
-    let mut data_bytes: Vec<u8> = Vec::new();
+    Ok(())
+}
 
-    researcher_profile.serialize(&mut data_bytes)?;
+fn validate_create_research_paper_accounts(
+    publisher_acc: &AccountInfo,
+    researcher_profile_pda_acc: &AccountInfo,
+    paper_pda_acc: &AccountInfo,
+) -> Result<(), DeResearcherError> {
+    if !publisher_acc.is_signer {
+        return Err(DeResearcherError::InvalidSigner);
+    }
 
-    researcher_profile_pda_acc
-        .try_borrow_mut_data()?
-        .copy_from_slice(&data_bytes);
+    if researcher_profile_pda_acc.data_is_empty() {
+        return Err(DeResearcherError::ResearcherProfileNotFound);
+    }
+
+    if !paper_pda_acc.data_is_empty() {
+        return Err(DeResearcherError::PaperAlreadyExists);
+    }
 
     Ok(())
 }
@@ -249,34 +305,36 @@ pub fn create_research_paper_ix(
 
     let paper_pda_acc = next_account_info(accounts_iter)?;
 
-    if researcher_profile_pda_acc.data_is_empty() {
-        return Err(DeResearcherError::ResearcherProfileNotFound.into());
-    }
+    let paper_pda = paper_pda_acc.key;
 
-    let mut researcher_profile =
-        ResearcherProfile::try_from_slice(&researcher_profile_pda_acc.data.borrow())?;
+    let paper_seeds: Vec<&[u8]> = vec![
+        RESEARCH_PAPER_PDA_SEED,
+        data.paper_content_hash[..32].as_ref(),
+        publisher_acc.key.as_ref(),
+    ];
 
-    if !publisher_acc.is_signer {
-        return Err(DeResearcherError::InvalidSigner.into());
-    }
+    validate_pda(paper_seeds, paper_pda, data.pda_bump, program_id)?;
 
-    if !paper_pda_acc.data_is_empty() {
-        return Err(DeResearcherError::PaperAlreadyExists.into());
-    }
+    let researcher_profile_seeds = vec![RESEARCHER_PROFILE_PDA_SEED, publisher_acc.key.as_ref()];
+
+    let researcher_profile_pda = researcher_profile_pda_acc.key;
+
+    validate_pda(
+        researcher_profile_seeds,
+        researcher_profile_pda,
+        data.pda_bump,
+        program_id,
+    )?;
+
+    validate_create_research_paper_accounts(
+        publisher_acc,
+        researcher_profile_pda_acc,
+        paper_pda_acc,
+    )?;
 
     let rent = Rent::get()?;
 
     let rent_exempt = rent.minimum_balance(ResearchPaper::size());
-
-    let seeds: Vec<&[u8]> = vec![b"deres_research_paper", publisher_acc.key.as_ref()];
-
-    let seeds_ref = seeds.as_ref();
-
-    let (paper_pda, bump) = Pubkey::find_program_address(seeds_ref, program_id);
-
-    if paper_pda.ne(paper_pda_acc.key) {
-        return Err(DeResearcherError::PubkeyMismatch.into());
-    }
 
     let create_researche_paper_ix = system_instruction::create_account(
         publisher_acc.key,
@@ -287,6 +345,7 @@ pub fn create_research_paper_ix(
     );
 
     let system_program_acc = next_account_info(accounts_iter)?;
+
     invoke_signed(
         &create_researche_paper_ix,
         &[
@@ -294,40 +353,43 @@ pub fn create_research_paper_ix(
             paper_pda_acc.clone(),
             system_program_acc.clone(),
         ],
-        &[seeds_ref, &[&[bump]]],
+        &[&[
+            RESEARCH_PAPER_PDA_SEED,
+            data.paper_content_hash[..32].as_ref(),
+            publisher_acc.key.as_ref(),
+            &[data.pda_bump],
+        ]],
     )?;
 
-    let paper = ResearchPaper {
-        address: *paper_pda_acc.key,
-        state: PaperState::AwaitingPeerReview,
-        creator_pubkey: *publisher_acc.key,
-        access_fee: data.access_fee,
-        version: 0,
-        total_approvals: 0,
-        total_citations: 0,
-        paper_content_hash: data.paper_content_hash,
-        meta_data_merkle_root: data.meta_data_merkle_root,
-    };
-
-    let mut paper_data_bytes: Vec<u8> = Vec::new();
-    paper.serialize(&mut paper_data_bytes)?;
-    paper_pda_acc
-        .try_borrow_mut_data()?
-        .copy_from_slice(&paper_data_bytes);
-
-    researcher_profile.total_papers_published += 1;
-
-    let mut profile_data_bytes: Vec<u8> = Vec::new();
-
-    researcher_profile.serialize(&mut profile_data_bytes)?;
-
-    researcher_profile_pda_acc
-        .try_borrow_mut_data()?
-        .copy_from_slice(&profile_data_bytes);
+    ResearchPaper::create_new(paper_pda_acc, researcher_profile_pda_acc, data)?;
     Ok(())
 }
 
-pub fn publish_paper_ix(program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult {
+fn validate_publish_paper_accounts(
+    publisher_acc: &AccountInfo,
+    paper_pda_acc: &AccountInfo,
+    paper_pda: &Pubkey,
+) -> Result<(), DeResearcherError> {
+    if !publisher_acc.is_signer {
+        return Err(DeResearcherError::InvalidSigner);
+    }
+
+    if paper_pda_acc.data_is_empty() {
+        return Err(DeResearcherError::PaperNotFound);
+    }
+
+    if paper_pda.ne(paper_pda_acc.key) {
+        return Err(DeResearcherError::PubkeyMismatch.into());
+    }
+
+    Ok(())
+}
+
+pub fn publish_paper_ix(
+    program_id: &Pubkey,
+    accounts: &[AccountInfo],
+    data: PublishPaper,
+) -> ProgramResult {
     msg!("Instruction: PublishPaper");
     let accounts_iter = &mut accounts.iter();
 
@@ -335,42 +397,64 @@ pub fn publish_paper_ix(program_id: &Pubkey, accounts: &[AccountInfo]) -> Progra
 
     let paper_pda_acc = next_account_info(accounts_iter)?;
 
-    let (paper_pda, _bump) = Pubkey::find_program_address(
-        &[RESEARCH_PAPER_PDA_SEED, publisher_acc.key.as_ref()],
-        program_id,
-    );
+    let paper_pda = paper_pda_acc.key;
 
-    if paper_pda.ne(paper_pda_acc.key) {
+    let paper = ResearchPaper::try_from_slice(&paper_pda_acc.data.borrow())?;
+
+    let seeds: Vec<&[u8]> = vec![
+        RESEARCH_PAPER_PDA_SEED,
+        paper.paper_content_hash[..32].as_ref(),
+        publisher_acc.key.as_ref(),
+    ];
+
+    validate_pda(seeds, paper_pda, data.pda_bump, program_id)?;
+    validate_publish_paper_accounts(publisher_acc, paper_pda_acc, &paper_pda)?;
+
+    ResearchPaper::publish_paper(paper_pda_acc, publisher_acc)?;
+
+    Ok(())
+}
+
+fn validate_add_peer_review_accounts(
+    reviewer_acc: &AccountInfo,
+    researcher_profile_pda_acc: &AccountInfo,
+    paper_pda_acc: &AccountInfo,
+    peer_review_pda_acc: &AccountInfo,
+    peer_review_pda: &Pubkey,
+) -> Result<(), DeResearcherError> {
+    if !reviewer_acc.is_signer {
+        return Err(DeResearcherError::InvalidSigner);
+    }
+
+    if researcher_profile_pda_acc.data_is_empty() {
+        return Err(DeResearcherError::ResearcherProfileNotFound);
+    }
+
+    if !peer_review_pda_acc.data_is_empty() {
+        return Err(DeResearcherError::PeerReviewAlreadyExists);
+    }
+
+    if !paper_pda_acc.data_is_empty() {
+        return Err(DeResearcherError::PaperNotFound);
+    }
+
+    if peer_review_pda_acc.is_writable {
+        return Err(DeResearcherError::ImmutableAccount);
+    }
+
+    if peer_review_pda.ne(peer_review_pda_acc.key) {
         return Err(DeResearcherError::PubkeyMismatch.into());
     }
 
-    if paper_pda_acc.data_is_empty() {
-        return Err(DeResearcherError::PaperNotFound.into());
+    Ok(())
+}
+
+fn validate_researcher_for_peer_review(
+    researcher_profile: &ResearcherProfile,
+) -> Result<(), DeResearcherError> {
+    if researcher_profile.state != ResearcherProfileState::Approved {
+        return Err(DeResearcherError::NotAllowedForPeerReview);
     }
-
-    let mut paper = ResearchPaper::try_from_slice(&paper_pda_acc.data.borrow())?;
-
-    if paper.creator_pubkey.ne(publisher_acc.key) || !publisher_acc.is_signer {
-        return Err(DeResearcherError::InvalidSigner.into());
-    }
-
-    if paper.state != PaperState::AwaitingPeerReview {
-        return Err(DeResearcherError::InvalidState.into());
-    }
-
-    if paper.total_approvals < MIN_APPROVALS {
-        return Err(DeResearcherError::NotEnoughApprovals.into());
-    }
-
-    paper.state = PaperState::Published;
-
-    let mut data_bytes: Vec<u8> = Vec::new();
-
-    paper.serialize(&mut data_bytes)?;
-
-    paper_pda_acc
-        .try_borrow_mut_data()?
-        .copy_from_slice(&data_bytes);
 
     Ok(())
 }
@@ -391,85 +475,56 @@ pub fn add_peer_review_ix(
 
     let peer_review_pda_acc = next_account_info(accounts_iter)?;
 
-    if researcher_profile_pda_acc.data_is_empty() {
-        return Err(DeResearcherError::ResearcherProfileNotFound.into());
-    }
+    let researcher_profile_pda = researcher_profile_pda_acc.key;
 
-    let mut researcher_profile =
+    let paper_pda = paper_pda_acc.key;
+
+    let researcher_profile =
         ResearcherProfile::try_from_slice(&researcher_profile_pda_acc.data.borrow())?;
 
-    if researcher_profile.state != ResearcherProfileState::Approved {
-        return Err(DeResearcherError::NotAllowedForPeerReview.into());
-    }
+    validate_researcher_for_peer_review(&researcher_profile)?;
 
-    if !peer_review_pda_acc.data_is_empty() {
-        return Err(DeResearcherError::PeerReviewAlreadyExists.into());
-    }
+    let peer_review_pda = peer_review_pda_acc.key;
 
-    if !reviewer_acc.is_signer {
-        return Err(DeResearcherError::InvalidSigner.into());
-    }
+    let peer_review_seeds = vec![
+        PEER_REVIEW_PDA_SEED,
+        reviewer_acc.key.as_ref(),
+        paper_pda_acc.key.as_ref(),
+    ];
 
-    let (peer_review_pda, peer_review_bump) = Pubkey::find_program_address(
-        &[
-            PEER_REVIEW_PDA_SEED,
-            reviewer_acc.key.as_ref(),
-            peer_review_pda_acc.key.as_ref(),
-        ],
+    validate_pda(
+        peer_review_seeds,
+        peer_review_pda,
+        data.pda_bump,
         program_id,
-    );
+    )?;
 
-    let (paper_pda, _paper_bump) = Pubkey::find_program_address(
-        &[RESEARCH_PAPER_PDA_SEED, paper_pda_acc.key.as_ref()],
+    let paper = ResearchPaper::try_from_slice(&paper_pda_acc.data.borrow())?;
+
+    let paper_seeds = vec![
+        RESEARCH_PAPER_PDA_SEED,
+        paper.paper_content_hash[..32].as_ref(),
+        paper.creator_pubkey.as_ref(),
+    ];
+
+    validate_pda(paper_seeds, paper_pda, data.pda_bump, program_id)?;
+
+    let researcher_profile_seeds = vec![RESEARCHER_PROFILE_PDA_SEED, reviewer_acc.key.as_ref()];
+
+    validate_pda(
+        researcher_profile_seeds,
+        researcher_profile_pda,
+        data.pda_bump,
         program_id,
-    );
+    )?;
 
-    if paper_pda.ne(paper_pda_acc.key) {
-        return Err(DeResearcherError::PubkeyMismatch.into());
-    }
-
-    if peer_review_pda.ne(peer_review_pda_acc.key) {
-        return Err(DeResearcherError::PubkeyMismatch.into());
-    }
-
-    let peer_review = PeerReview {
-        address: peer_review_pda,
-        reviewer_pubkey: *reviewer_acc.key,
-        paper_pubkey: *paper_pda_acc.key,
-        review: Review {
-            quality_of_research: data.quality_of_research,
-            potential_for_real_world_use_case: data.potential_for_real_world_use_case,
-            domain_knowledge: data.domain_knowledge,
-            practicality_of_result_obtained: data.practicality_of_result_obtained,
-        },
-        meta_data_merkle_root: data.meta_data_merkle_root,
-    };
-
-    let cumulative_score = peer_review.review.quality_of_research
-        + peer_review.review.potential_for_real_world_use_case
-        + peer_review.review.domain_knowledge
-        + peer_review.review.practicality_of_result_obtained;
-
-    let avg_score = cumulative_score / 4;
-
-    if avg_score > 50 {
-        let mut paper = ResearchPaper::try_from_slice(&paper_pda_acc.data.borrow())?;
-
-        paper.total_approvals += 1;
-        paper.total_citations += 1;
-
-        let mut data_bytes: Vec<u8> = Vec::new();
-
-        paper.serialize(&mut data_bytes)?;
-
-        paper_pda_acc
-            .try_borrow_mut_data()?
-            .copy_from_slice(&data_bytes);
-    }
-
-    let mut data_bytes: Vec<u8> = Vec::new();
-
-    peer_review.serialize(&mut data_bytes)?;
+    validate_add_peer_review_accounts(
+        reviewer_acc,
+        researcher_profile_pda_acc,
+        paper_pda_acc,
+        peer_review_pda_acc,
+        &peer_review_pda,
+    )?;
 
     let rent = Rent::get()?;
 
@@ -483,13 +538,6 @@ pub fn add_peer_review_ix(
         program_id,
     );
 
-    let seeds = vec![
-        PEER_REVIEW_PDA_SEED,
-        reviewer_acc.key.as_ref(),
-        paper_pda_acc.key.as_ref(),
-    ];
-    let seeds_ref = seeds.as_ref();
-
     let system_program_acc = next_account_info(accounts_iter)?;
 
     invoke_signed(
@@ -499,22 +547,57 @@ pub fn add_peer_review_ix(
             peer_review_pda_acc.clone(),
             system_program_acc.clone(),
         ],
-        &[seeds_ref, &[&[peer_review_bump]]],
+        &[&[
+            PEER_REVIEW_PDA_SEED,
+            reviewer_acc.key.as_ref(),
+            paper_pda_acc.key.as_ref(),
+            &[data.pda_bump],
+        ]],
     )?;
 
-    peer_review_pda_acc
-        .try_borrow_mut_data()?
-        .copy_from_slice(&data_bytes);
+    PeerReview::create_new(
+        peer_review_pda_acc,
+        reviewer_acc,
+        paper_pda_acc,
+        researcher_profile_pda_acc,
+        data,
+    )?;
 
-    researcher_profile.total_reviews += 1;
+    Ok(())
+}
 
-    let mut profile_data_bytes: Vec<u8> = Vec::new();
+fn validate_get_access_accounts(
+    reader_acc: &AccountInfo,
+    researcher_profile_pda_acc: &AccountInfo,
+    whitelist_pda_acc: &AccountInfo,
+    paper_pda_acc: &AccountInfo,
+    whitelist_pda: &Pubkey,
+    paper_pda: &Pubkey,
+    fee_receiver_acc: &AccountInfo,
+) -> Result<(), DeResearcherError> {
+    if !reader_acc.is_signer {
+        return Err(DeResearcherError::InvalidSigner);
+    }
 
-    researcher_profile.serialize(&mut profile_data_bytes)?;
+    if researcher_profile_pda_acc.data_is_empty() {
+        return Err(DeResearcherError::ResearcherProfileNotFound);
+    }
 
-    researcher_profile_pda_acc
-        .try_borrow_mut_data()?
-        .copy_from_slice(&profile_data_bytes);
+    if paper_pda_acc.data_is_empty() {
+        return Err(DeResearcherError::PaperNotFound);
+    }
+
+    if whitelist_pda.ne(whitelist_pda_acc.key) {
+        return Err(DeResearcherError::PubkeyMismatch.into());
+    }
+
+    if paper_pda.ne(paper_pda_acc.key) {
+        return Err(DeResearcherError::PubkeyMismatch.into());
+    }
+
+    if fee_receiver_acc.key.ne(&paper_pda_acc.key) {
+        return Err(DeResearcherError::InvalidFeeReceiver);
+    }
 
     Ok(())
 }
@@ -529,35 +612,41 @@ pub fn get_access_ix(
 
     let reader_acc = next_account_info(accounts_iter)?;
 
-    if !reader_acc.is_signer {
-        return Err(DeResearcherError::InvalidSigner.into());
-    }
-
     let researcher_profile_pda_acc = next_account_info(accounts_iter)?;
-
-    if researcher_profile_pda_acc.data_is_empty() {
-        return Err(DeResearcherError::ResearcherProfileNotFound.into());
-    }
 
     let whitelist_pda_acc = next_account_info(accounts_iter)?;
 
     let paper_pda_acc = next_account_info(accounts_iter)?;
 
-    let (whitelist_pda, whitelist_bump) =
-        Pubkey::find_program_address(&[WHITELIST_PDA_SEED, reader_acc.key.as_ref()], program_id);
+    let whitelist_pda = whitelist_pda_acc.key;
 
-    if whitelist_pda.ne(whitelist_pda_acc.key) {
-        return Err(DeResearcherError::PubkeyMismatch.into());
-    }
+    let whitelist_seeds = vec![WHITELIST_PDA_SEED, reader_acc.key.as_ref()];
 
-    let (paper_pda, _paper_bump) = Pubkey::find_program_address(
-        &[RESEARCH_PAPER_PDA_SEED, paper_pda_acc.key.as_ref()],
-        program_id,
-    );
+    validate_pda(whitelist_seeds, whitelist_pda, data.pda_bump, program_id)?;
 
-    if paper_pda.ne(paper_pda_acc.key) {
-        return Err(DeResearcherError::PubkeyMismatch.into());
-    }
+    let paper_pda = paper_pda_acc.key;
+
+    let paper = ResearchPaper::try_from_slice(&paper_pda_acc.data.borrow())?;
+
+    let paper_seeds = vec![
+        RESEARCH_PAPER_PDA_SEED,
+        paper.paper_content_hash[..32].as_ref(),
+        paper.creator_pubkey.as_ref(),
+    ];
+
+    validate_pda(paper_seeds, paper_pda, data.pda_bump, program_id)?;
+
+    let fee_receiver_acc = next_account_info(accounts_iter)?;
+
+    validate_get_access_accounts(
+        reader_acc,
+        researcher_profile_pda_acc,
+        whitelist_pda_acc,
+        paper_pda_acc,
+        &whitelist_pda,
+        &paper_pda,
+        fee_receiver_acc,
+    )?;
 
     if whitelist_pda_acc.data_is_empty() {
         let create_whitelist_ix = system_instruction::create_account(
@@ -568,9 +657,6 @@ pub fn get_access_ix(
             program_id,
         );
 
-        let seeds = vec![WHITELIST_PDA_SEED, reader_acc.key.as_ref()];
-        let seeds_ref = seeds.as_ref();
-
         let system_program_acc = next_account_info(accounts_iter)?;
         invoke_signed(
             &create_whitelist_ix,
@@ -579,20 +665,15 @@ pub fn get_access_ix(
                 whitelist_pda_acc.clone(),
                 system_program_acc.clone(),
             ],
-            &[seeds_ref, &[&[whitelist_bump]]],
+            &[&[
+                WHITELIST_PDA_SEED,
+                reader_acc.key.as_ref(),
+                &[data.pda_bump],
+            ]],
         )?;
     }
 
-    let fee_receiver_acc = next_account_info(accounts_iter)?;
-
-    let mut researcher_profile =
-        ResearcherProfile::try_from_slice(&researcher_profile_pda_acc.data.borrow())?;
-
-    let mut paper = ResearchPaper::try_from_slice(&paper_pda_acc.data.borrow())?;
-
-    if paper.creator_pubkey.ne(fee_receiver_acc.key) {
-        return Err(DeResearcherError::InvalidFeeReceiver.into());
-    }
+    let paper = ResearchPaper::try_from_slice(&paper_pda_acc.data.borrow())?;
 
     invoke(
         &system_instruction::transfer(
@@ -603,38 +684,13 @@ pub fn get_access_ix(
         &[reader_acc.clone(), fee_receiver_acc.clone()],
     )?;
 
-    let whitelist = ReaderWhitelist {
-        reader_pubkey: *reader_acc.key,
-        data_merkle_root: data.meta_data_merkle_root,
-    };
-
-    let mut whitelist_data_bytes: Vec<u8> = Vec::new();
-
-    whitelist.serialize(&mut whitelist_data_bytes)?;
-
-    whitelist_pda_acc
-        .try_borrow_mut_data()?
-        .copy_from_slice(&whitelist_data_bytes);
-
-    paper.total_citations += 1;
-
-    let mut paper_data_bytes: Vec<u8> = Vec::new();
-
-    paper.serialize(&mut paper_data_bytes)?;
-
-    paper_pda_acc
-        .try_borrow_mut_data()?
-        .copy_from_slice(&paper_data_bytes);
-
-    researcher_profile.total_citations += 1;
-
-    let mut profile_data_bytes: Vec<u8> = Vec::new();
-
-    researcher_profile.serialize(&mut profile_data_bytes)?;
-
-    researcher_profile_pda_acc
-        .try_borrow_mut_data()?
-        .copy_from_slice(&profile_data_bytes);
+    ReaderWhitelist::access_paper(
+        whitelist_pda_acc,
+        reader_acc,
+        paper_pda_acc,
+        researcher_profile_pda_acc,
+        data,
+    )?;
 
     Ok(())
 }

@@ -27,14 +27,15 @@ impl Processor {
             DeResearcherInstruction::CreateResearchePaper(data) => {
                 create_research_paper_ix(program_id, accounts, data)?;
             }
-            DeResearcherInstruction::PublishPaper => publish_paper_ix(program_id, accounts)?,
+            DeResearcherInstruction::PublishPaper(data) => {
+                publish_paper_ix(program_id, accounts, data)?
+            }
             DeResearcherInstruction::AddPeerReview(data) => {
                 add_peer_review_ix(program_id, accounts, data)?;
             }
             DeResearcherInstruction::GetAccessToPaper(data) => {
                 get_access_ix(program_id, accounts, data)?
             }
-            _ => return Err(DeResearcherError::InvalidInstruction.into()),
         }
 
         Ok(())

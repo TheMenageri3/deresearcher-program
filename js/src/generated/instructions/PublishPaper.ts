@@ -42,7 +42,7 @@ export const publishPaperInstructionDiscriminator = 2
  */
 export function createPublishPaperInstruction(
   accounts: PublishPaperInstructionAccounts,
-  programId = new web3.PublicKey('P1SsZEQvb6gTPrdJQ5mu6oCyJCJhVKxFFnk9ztjsoEL')
+  programId = new web3.PublicKey('C5M2JxBaxmsW62BgujPXEPytw65igtUjr6mFbD5pmypM')
 ) {
   const [data] = PublishPaperStruct.serialize({
     instructionDiscriminator: publishPaperInstructionDiscriminator,

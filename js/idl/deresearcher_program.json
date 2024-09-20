@@ -408,14 +408,6 @@
           {
             "name": "name",
             "type": "string"
-          },
-          {
-            "name": "email",
-            "type": "string"
-          },
-          {
-            "name": "reputation",
-            "type": "u8"
           }
         ]
       }
@@ -625,11 +617,21 @@
       "code": 11,
       "name": "PaperNotFound",
       "msg": "Paper not found"
+    },
+    {
+      "code": 12,
+      "name": "SerializationError",
+      "msg": "serialization error"
+    },
+    {
+      "code": 13,
+      "name": "SizeOverflow",
+      "msg": "Size overflow"
     }
   ],
   "metadata": {
     "origin": "shank",
-    "address": "P1SsZEQvb6gTPrdJQ5mu6oCyJCJhVKxFFnk9ztjsoEL",
+    "address": "C5M2JxBaxmsW62BgujPXEPytw65igtUjr6mFbD5pmypM",
     "binaryVersion": "0.4.2",
     "libVersion": "0.4.2"
   }

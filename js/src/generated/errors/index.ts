@@ -279,6 +279,49 @@ createErrorFromCodeLookup.set(0xb, () => new PaperNotFoundError())
 createErrorFromNameLookup.set('PaperNotFound', () => new PaperNotFoundError())
 
 /**
+ * SerializationError: 'serialization error'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class SerializationErrorError extends Error {
+  readonly code: number = 0xc
+  readonly name: string = 'SerializationError'
+  constructor() {
+    super('serialization error')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, SerializationErrorError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xc, () => new SerializationErrorError())
+createErrorFromNameLookup.set(
+  'SerializationError',
+  () => new SerializationErrorError()
+)
+
+/**
+ * SizeOverflow: 'Size overflow'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class SizeOverflowError extends Error {
+  readonly code: number = 0xd
+  readonly name: string = 'SizeOverflow'
+  constructor() {
+    super('Size overflow')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, SizeOverflowError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xd, () => new SizeOverflowError())
+createErrorFromNameLookup.set('SizeOverflow', () => new SizeOverflowError())
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

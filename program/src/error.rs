@@ -30,6 +30,14 @@ pub enum DeResearcherError {
     NotAllowedForPeerReview,
     #[error("Paper not found")]
     PaperNotFound,
+    #[error("serialization error")]
+    SerializationError,
+    #[error("Size overflow")]
+    SizeOverflow,
+    #[error("Account is Immutable")]
+    ImmutableAccount,
+    #[error("PDA pubkey mismatch")]
+    PdaPubekyMismatch,
 }
 
 impl From<DeResearcherError> for ProgramError {
