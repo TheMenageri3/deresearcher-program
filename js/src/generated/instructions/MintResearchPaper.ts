@@ -43,8 +43,8 @@ export const MintResearchPaperStruct = new beet.FixableBeetArgsStruct<
  * @property [_writable_] researcherProfilePdaAcc
  * @property [_writable_] researchMintCollectionPdaAcc
  * @property [_writable_] paperPdaAcc
- * @property [] systemProgramAcc
  * @property [_writable_] feeReceiverAcc
+ * @property [] systemProgramAcc
  * @category Instructions
  * @category MintResearchPaper
  * @category generated
@@ -54,8 +54,8 @@ export type MintResearchPaperInstructionAccounts = {
   researcherProfilePdaAcc: web3.PublicKey;
   researchMintCollectionPdaAcc: web3.PublicKey;
   paperPdaAcc: web3.PublicKey;
-  systemProgramAcc: web3.PublicKey;
   feeReceiverAcc: web3.PublicKey;
+  systemProgramAcc: web3.PublicKey;
 };
 
 export const mintResearchPaperInstructionDiscriminator = 4;
@@ -101,13 +101,13 @@ export function createMintResearchPaperInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.systemProgramAcc,
-      isWritable: false,
+      pubkey: accounts.feeReceiverAcc,
+      isWritable: true,
       isSigner: false,
     },
     {
-      pubkey: accounts.feeReceiverAcc,
-      isWritable: true,
+      pubkey: accounts.systemProgramAcc,
+      isWritable: false,
       isSigner: false,
     },
   ];

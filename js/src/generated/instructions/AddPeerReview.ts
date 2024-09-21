@@ -40,6 +40,7 @@ export const AddPeerReviewStruct = new beet.FixableBeetArgsStruct<
  * @property [_writable_] researcherProfilePdaAcc
  * @property [_writable_] paperPdaAcc
  * @property [_writable_] peerReviewPdaAcc
+ * @property [] systemProgramAcc
  * @category Instructions
  * @category AddPeerReview
  * @category generated
@@ -49,6 +50,7 @@ export type AddPeerReviewInstructionAccounts = {
   researcherProfilePdaAcc: web3.PublicKey;
   paperPdaAcc: web3.PublicKey;
   peerReviewPdaAcc: web3.PublicKey;
+  systemProgramAcc: web3.PublicKey;
 };
 
 export const addPeerReviewInstructionDiscriminator = 3;
@@ -91,6 +93,11 @@ export function createAddPeerReviewInstruction(
     {
       pubkey: accounts.peerReviewPdaAcc,
       isWritable: true,
+      isSigner: false,
+    },
+    {
+      pubkey: accounts.systemProgramAcc,
+      isWritable: false,
       isSigner: false,
     },
   ];

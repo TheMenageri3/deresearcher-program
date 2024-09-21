@@ -38,6 +38,8 @@ pub enum DeResearcherError {
     ImmutableAccount,
     #[error("PDA pubkey mismatch")]
     PdaPubekyMismatch,
+    #[error("Publisher cannot add a peer review to their own paper")]
+    PublisherCannotAddPeerReview,
 }
 
 impl From<DeResearcherError> for ProgramError {

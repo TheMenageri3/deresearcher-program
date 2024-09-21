@@ -30,7 +30,7 @@ describe("Integration tests", () => {
   it("Create a ReseacherProfile account", async () => {
     try {
       const seeds = [
-        Buffer.from("deres_profile"),
+        Buffer.from("deres_researcher_profile"),
         localWallet.publicKey.toBuffer(),
       ];
 
@@ -80,7 +80,7 @@ describe("Integration tests", () => {
   it("fetch the researcher profile", async () => {
     try {
       const seeds = [
-        Buffer.from("deres_profile"),
+        Buffer.from("deres_researcher_profile"),
         localWallet.publicKey.toBuffer(),
       ];
 
@@ -107,7 +107,7 @@ describe("Integration tests", () => {
       const paperContentHash = "48y2ehidkhdkhadahkhadhiakhdiaydh"; //32 bytes
 
       const seeds = [
-        Buffer.from("deres_paper"),
+        Buffer.from("deres_research_paper"),
         Buffer.from(paperContentHash),
         localWallet.publicKey.toBuffer(),
       ];
@@ -120,7 +120,10 @@ describe("Integration tests", () => {
       console.log("Paper pda", paperPda.toBase58());
 
       const researcherProfilePda = solana.PublicKey.findProgramAddressSync(
-        [Buffer.from("deres_profile"), localWallet.publicKey.toBuffer()],
+        [
+          Buffer.from("deres_researcher_profile"),
+          localWallet.publicKey.toBuffer(),
+        ],
         sdk.PROGRAM_ID
       )[0];
 
@@ -170,7 +173,7 @@ describe("Integration tests", () => {
       const paperContentHash = "48y2ehidkhdkhadahkhadhiakhdiaydh"; //32 bytes
 
       const seeds = [
-        Buffer.from("deres_paper"),
+        Buffer.from("deres_research_paper"),
         Buffer.from(paperContentHash),
         localWallet.publicKey.toBuffer(),
       ];
@@ -192,6 +195,276 @@ describe("Integration tests", () => {
       const [acc, _id] =
         sdk.accountProviders.ResearchPaper.fromAccountInfo(acc_info);
       console.log(acc.pretty());
+    } catch (e) {
+      console.error(e);
+    }
+  });
+
+  it("Add a peer review", async () => {
+    try {
+      const paperContentHash = "48y2ehidkhdkhadahkhadhiakhdiaydh"; //32 bytes
+
+      const seeds = [
+        Buffer.from("deres_research_paper"),
+        Buffer.from(paperContentHash),
+        localWallet.publicKey.toBuffer(),
+      ];
+
+      const [paperPda, bump] = solana.PublicKey.findProgramAddressSync(
+        seeds,
+        sdk.PROGRAM_ID
+      );
+
+      console.log("Paper pda", paperPda.toBase58());
+
+      const researcherProfilePda = solana.PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("deres_researcher_profile"),
+          localWallet.publicKey.toBuffer(),
+        ],
+        sdk.PROGRAM_ID
+      )[0];
+
+      console.log("Researcher profile pda", researcherProfilePda.toBase58());
+
+      const [peerReviewPda, bump2] = solana.PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("deres_peer_review"),
+          paperPda.toBuffer(),
+          localWallet.publicKey.toBuffer(),
+        ],
+        sdk.PROGRAM_ID
+      );
+
+      console.log("Peer review pda", peerReviewPda.toBase58());
+
+      const ix = sdk.createAddPeerReviewInstruction(
+        {
+          reviewerAcc: localWallet.publicKey,
+          researcherProfilePdaAcc: researcherProfilePda,
+          paperPdaAcc: paperPda,
+          peerReviewPdaAcc: peerReviewPda,
+          systemProgramAcc: solana.SystemProgram.programId,
+        },
+        {
+          addPeerReview: {
+            qualityOfResearch: 100,
+            potentialForRealWorldUseCase: 100,
+            practicalityOfResultObtained: 100,
+            domainKnowledge: 100,
+            metaDataMerkleRoot: "djagdbjadbjadbjaldb",
+            pdaBump: bump2,
+          },
+        }
+      );
+
+      const tx = new solana.Transaction().add(ix);
+
+      const blockhashWithHeight = await connection.getLatestBlockhash();
+
+      tx.recentBlockhash = blockhashWithHeight.blockhash;
+
+      tx.feePayer = localWallet.publicKey;
+
+      tx.sign(localWallet);
+
+      const txSig = await connection.sendRawTransaction(tx.serialize(), {
+        preflightCommitment: "finalized",
+      });
+
+      await connection.confirmTransaction(txSig, "finalized");
+
+      console.log("Transaction signature", txSig);
+    } catch (e) {
+      console.error(e);
+    }
+  });
+
+  it("Publish a research paper", async () => {
+    try {
+      const paperContentHash = "48y2ehidkhdkhadahkhadhiakhdiaydh"; //32 bytes
+
+      const seeds = [
+        Buffer.from("deres_research_paper"),
+        Buffer.from(paperContentHash),
+        localWallet.publicKey.toBuffer(),
+      ];
+
+      const [paperPda, bump] = solana.PublicKey.findProgramAddressSync(
+        seeds,
+        sdk.PROGRAM_ID
+      );
+
+      console.log("Paper pda", paperPda.toBase58());
+
+      const ix = sdk.createPublishPaperInstruction(
+        {
+          publisherAcc: localWallet.publicKey,
+          paperPdaAcc: paperPda,
+        },
+        {
+          publishPaper: {
+            pdaBump: bump,
+          },
+        }
+      );
+
+      const tx = new solana.Transaction().add(ix);
+
+      const blockhashWithHeight = await connection.getLatestBlockhash();
+
+      tx.recentBlockhash = blockhashWithHeight.blockhash;
+
+      tx.feePayer = localWallet.publicKey;
+
+      tx.sign(localWallet);
+
+      const txSig = await connection.sendRawTransaction(tx.serialize(), {
+        preflightCommitment: "finalized",
+      });
+
+      await connection.confirmTransaction(txSig, "finalized");
+
+      console.log("Transaction signature", txSig);
+    } catch (e) {
+      console.error(e);
+    }
+  });
+
+  it("Mint a research paper", async () => {
+    try {
+      const paperContentHash = "48y2ehidkhdkhadahkhadhiakhdiaydh"; //32 bytes
+
+      const seeds = [
+        Buffer.from("deres_research_paper"),
+        Buffer.from(paperContentHash),
+        localWallet.publicKey.toBuffer(),
+      ];
+
+      const [paperPda, bump1] = solana.PublicKey.findProgramAddressSync(
+        seeds,
+        sdk.PROGRAM_ID
+      );
+
+      console.log("Paper pda", paperPda.toBase58());
+
+      const researcherProfilePda = solana.PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("deres_researcher_profile"),
+          localWallet.publicKey.toBuffer(),
+        ],
+        sdk.PROGRAM_ID
+      )[0];
+
+      console.log("Researcher profile pda", researcherProfilePda.toBase58());
+
+      const [researchMintCollectionPda, bump2] =
+        solana.PublicKey.findProgramAddressSync(
+          [
+            Buffer.from("deres_mint_collection"),
+            localWallet.publicKey.toBuffer(),
+          ],
+          sdk.PROGRAM_ID
+        );
+
+      console.log(
+        "Research mint collection pda",
+        researchMintCollectionPda.toBase58()
+      );
+
+      const ix = sdk.createMintResearchPaperInstruction(
+        {
+          readerAcc: localWallet.publicKey,
+          researcherProfilePdaAcc: researcherProfilePda,
+          researchMintCollectionPdaAcc: researchMintCollectionPda,
+          paperPdaAcc: paperPda,
+          feeReceiverAcc: localWallet.publicKey,
+          systemProgramAcc: solana.SystemProgram.programId,
+        },
+        {
+          mintResearchPaper: {
+            metaDataMerkleRoot: "djagdbjadbjadbjaldb",
+            pdaBump: bump2,
+          },
+        }
+      );
+
+      const tx = new solana.Transaction().add(ix);
+
+      const blockhashWithHeight = await connection.getLatestBlockhash();
+
+      tx.recentBlockhash = blockhashWithHeight.blockhash;
+
+      tx.feePayer = localWallet.publicKey;
+
+      tx.sign(localWallet);
+
+      const txSig = await connection.sendRawTransaction(tx.serialize(), {
+        preflightCommitment: "finalized",
+      });
+
+      await connection.confirmTransaction(txSig, "finalized");
+
+      console.log("Transaction signature", txSig);
+    } catch (e) {
+      console.error(e);
+    }
+  });
+
+  it("fetch the minted research paper", async () => {
+    try {
+      const paperContentHash = "48y2ehidkhdkhadahkhadhiakhdiaydh"; //32 bytes
+
+      const seeds = [
+        Buffer.from("deres_research_paper"),
+        Buffer.from(paperContentHash),
+        localWallet.publicKey.toBuffer(),
+      ];
+
+      const [paperPda, bump] = solana.PublicKey.findProgramAddressSync(
+        seeds,
+        sdk.PROGRAM_ID
+      );
+
+      console.log("Paper pda", paperPda.toBase58());
+
+      let acc_info = await connection.getAccountInfo(paperPda);
+
+      if (!acc_info) {
+        console.error("Account not found");
+        return;
+      }
+
+      const [acc, _id] =
+        sdk.accountProviders.ResearchPaper.fromAccountInfo(acc_info);
+      console.log(acc.pretty());
+
+      const researchMintCollectionPda = solana.PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("deres_mint_collection"),
+          localWallet.publicKey.toBuffer(),
+        ],
+        sdk.PROGRAM_ID
+      )[0];
+
+      console.log(
+        "Research mint collection pda",
+        researchMintCollectionPda.toBase58()
+      );
+
+      const acc_info2 = await connection.getAccountInfo(
+        researchMintCollectionPda
+      );
+
+      if (!acc_info2) {
+        console.error("Account not found");
+        return;
+      }
+
+      const [acc2, _id2] =
+        sdk.accountProviders.ResearchMintCollection.fromAccountInfo(acc_info2);
+
+      console.log(acc2.pretty());
     } catch (e) {
       console.error(e);
     }

@@ -368,6 +368,32 @@ createErrorFromNameLookup.set(
 )
 
 /**
+ * PublisherCannotAddPeerReview: 'Publisher cannot add a peer review to their own paper'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class PublisherCannotAddPeerReviewError extends Error {
+  readonly code: number = 0x10
+  readonly name: string = 'PublisherCannotAddPeerReview'
+  constructor() {
+    super('Publisher cannot add a peer review to their own paper')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, PublisherCannotAddPeerReviewError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(
+  0x10,
+  () => new PublisherCannotAddPeerReviewError()
+)
+createErrorFromNameLookup.set(
+  'PublisherCannotAddPeerReview',
+  () => new PublisherCannotAddPeerReviewError()
+)
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

@@ -1,12 +1,12 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use shank::ShankAccount;
-use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, pubkey::Pubkey};
+use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, msg, pubkey::Pubkey};
 
 use crate::{
     error::DeResearcherError,
     instruction::{
         AddPeerReview, CreateResearchePaper, CreateResearcherProfile, MintResearchPaper,
-        MAX_STRING_SIZE, MIN_APPROVALS,
+        MAX_STRING_SIZE, MIN_APPROVALS_FOR_PUBLISH,
     },
 };
 
@@ -31,6 +31,7 @@ pub fn checked_string_convt_to_64_bytes(
 pub enum PaperState {
     AwaitingPeerReview,
     InPeerReview,
+    ApprovedToPublish,
     RequiresRevision,
     Published,
     Minted,
@@ -109,18 +110,20 @@ pub struct ResearchPaper {
     pub paper_content_hash: [u8; 64],    // Hash of the paper's content 64 bytes
     pub total_approvals: u8,             // Total approvals 1 byte
     pub total_citations: u64,            // Total citations 8 bytes
+    pub total_mints: u64,                // Total mints 8 bytes
     pub meta_data_merkle_root: [u8; 64], // Data merkle root 64 bytes
     pub bump: u8,                        // Bump seed 1 byte
 }
 
 impl ResearchPaper {
     pub fn size() -> usize {
-        32 + 32 + 1 + 4 + 1 + 64 + 1 + 8 + 64 + 1 //208
+        32 + 32 + 1 + 4 + 1 + 64 + 1 + 8 + 8 + 64 + 1 //208
     }
 
     pub fn create_new(
         research_paper_pda_acc: &AccountInfo,
         researcher_profile_pda_acc: &AccountInfo,
+        publisher_acc: &AccountInfo,
         data: CreateResearchePaper,
     ) -> ProgramResult {
         let content_hash_bytes = checked_string_convt_to_64_bytes(&data.paper_content_hash)?;
@@ -129,13 +132,14 @@ impl ResearchPaper {
 
         let research_paper = Self {
             address: *research_paper_pda_acc.key,
-            creator_pubkey: *researcher_profile_pda_acc.key,
+            creator_pubkey: *publisher_acc.key,
             state: PaperState::AwaitingPeerReview,
             access_fee: data.access_fee,
             version: 0,
             paper_content_hash: content_hash_bytes,
             total_approvals: 0,
             total_citations: 0,
+            total_mints: 0,
             meta_data_merkle_root: merkle_root_bytes,
             bump: data.pda_bump,
         };
@@ -170,16 +174,12 @@ impl ResearchPaper {
     ) -> ProgramResult {
         let mut paper = ResearchPaper::try_from_slice(&paper_pda_acc.try_borrow_data()?)?;
 
-        if paper.state != PaperState::AwaitingPeerReview {
-            return Err(DeResearcherError::InvalidState.into());
-        }
-
-        if paper.total_approvals < MIN_APPROVALS {
-            return Err(DeResearcherError::NotEnoughApprovals.into());
-        }
-
         if paper.creator_pubkey.ne(publisher_acc.key) {
             return Err(DeResearcherError::PubkeyMismatch.into());
+        }
+
+        if paper.state != PaperState::ApprovedToPublish {
+            return Err(DeResearcherError::InvalidState.into());
         }
 
         paper.state = PaperState::Published;
@@ -235,16 +235,24 @@ impl PeerReview {
             bump: data.pda_bump,
         };
 
-        let cumulative_score = peer_review.quality_of_research
-            + peer_review.potential_for_real_world_use_case
-            + peer_review.domain_knowledge
-            + peer_review.practicality_of_result_obtained;
+        let cumulative_score = peer_review.quality_of_research as u16
+            + peer_review.potential_for_real_world_use_case as u16
+            + peer_review.domain_knowledge as u16
+            + peer_review.practicality_of_result_obtained as u16;
 
         let avg_score = cumulative_score / 4;
         let mut paper = ResearchPaper::try_from_slice(&paper_pda_acc.data.borrow())?;
 
+        if paper.state == PaperState::AwaitingPeerReview {
+            paper.state = PaperState::InPeerReview;
+        }
+
         if avg_score > 50 {
             paper.total_approvals += 1;
+        }
+
+        if paper.total_approvals >= MIN_APPROVALS_FOR_PUBLISH {
+            paper.state = PaperState::ApprovedToPublish;
         }
 
         paper.total_citations += 1;
@@ -324,6 +332,8 @@ impl ResearchMintCollection {
         }
 
         paper.total_citations += 1;
+
+        paper.total_mints += 1;
 
         let mut data_bytes: Vec<u8> = Vec::new();
 

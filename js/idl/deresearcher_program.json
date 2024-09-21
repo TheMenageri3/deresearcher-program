@@ -159,6 +159,14 @@
           "docs": [
             "Peer review PDA account"
           ]
+        },
+        {
+          "name": "systemProgramAcc",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "System program account"
+          ]
         }
       ],
       "args": [
@@ -198,7 +206,7 @@
           "isMut": true,
           "isSigner": false,
           "docs": [
-            "Reader's research mint collection PDA account"
+            "Research mint collection PDA account"
           ]
         },
         {
@@ -210,19 +218,19 @@
           ]
         },
         {
-          "name": "systemProgramAcc",
-          "isMut": false,
-          "isSigner": false,
-          "docs": [
-            "System program account"
-          ]
-        },
-        {
           "name": "feeReceiverAcc",
           "isMut": true,
           "isSigner": false,
           "docs": [
             "Fee receiver's account"
+          ]
+        },
+        {
+          "name": "systemProgramAcc",
+          "isMut": false,
+          "isSigner": false,
+          "docs": [
+            "System program account"
           ]
         }
       ],
@@ -661,6 +669,11 @@
       "code": 15,
       "name": "PdaPubekyMismatch",
       "msg": "PDA pubkey mismatch"
+    },
+    {
+      "code": 16,
+      "name": "PublisherCannotAddPeerReview",
+      "msg": "Publisher cannot add a peer review to their own paper"
     }
   ],
   "metadata": {
