@@ -342,6 +342,10 @@
             "type": "u64"
           },
           {
+            "name": "totalMints",
+            "type": "u64"
+          },
+          {
             "name": "metaDataMerkleRoot",
             "type": {
               "array": [
@@ -543,6 +547,9 @@
           },
           {
             "name": "InPeerReview"
+          },
+          {
+            "name": "ApprovedToPublish"
           },
           {
             "name": "RequiresRevision"

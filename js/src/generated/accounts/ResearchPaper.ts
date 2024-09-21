@@ -24,6 +24,7 @@ export type ResearchPaperArgs = {
   paperContentHash: number[] /* size: 64 */
   totalApprovals: number
   totalCitations: beet.bignum
+  totalMints: beet.bignum
   metaDataMerkleRoot: number[] /* size: 64 */
   bump: number
 }
@@ -44,6 +45,7 @@ export class ResearchPaper implements ResearchPaperArgs {
     readonly paperContentHash: number[] /* size: 64 */,
     readonly totalApprovals: number,
     readonly totalCitations: beet.bignum,
+    readonly totalMints: beet.bignum,
     readonly metaDataMerkleRoot: number[] /* size: 64 */,
     readonly bump: number
   ) {}
@@ -61,6 +63,7 @@ export class ResearchPaper implements ResearchPaperArgs {
       args.paperContentHash,
       args.totalApprovals,
       args.totalCitations,
+      args.totalMints,
       args.metaDataMerkleRoot,
       args.bump
     )
@@ -184,6 +187,17 @@ export class ResearchPaper implements ResearchPaperArgs {
         }
         return x
       })(),
+      totalMints: (() => {
+        const x = <{ toNumber: () => number }>this.totalMints
+        if (typeof x.toNumber === 'function') {
+          try {
+            return x.toNumber()
+          } catch (_) {
+            return x
+          }
+        }
+        return x
+      })(),
       metaDataMerkleRoot: this.metaDataMerkleRoot,
       bump: this.bump,
     }
@@ -207,6 +221,7 @@ export const researchPaperBeet = new beet.BeetStruct<
     ['paperContentHash', beet.uniformFixedSizeArray(beet.u8, 64)],
     ['totalApprovals', beet.u8],
     ['totalCitations', beet.u64],
+    ['totalMints', beet.u64],
     ['metaDataMerkleRoot', beet.uniformFixedSizeArray(beet.u8, 64)],
     ['bump', beet.u8],
   ],

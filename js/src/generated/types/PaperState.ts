@@ -13,6 +13,7 @@ import * as beet from '@metaplex-foundation/beet'
 export enum PaperState {
   AwaitingPeerReview,
   InPeerReview,
+  ApprovedToPublish,
   RequiresRevision,
   Published,
   Minted,
