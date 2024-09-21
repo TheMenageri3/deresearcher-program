@@ -8,75 +8,75 @@
 import * as beet from "@metaplex-foundation/beet";
 import * as web3 from "@solana/web3.js";
 import {
-  type GetAccessToPaper,
-  getAccessToPaperBeet,
-} from "../types/GetAccessToPaper";
+  type MintResearchPaper,
+  mintResearchPaperBeet,
+} from "../types/MintResearchPaper";
 
 /**
  * @category Instructions
- * @category GetAccessToPaper
+ * @category MintResearchPaper
  * @category generated
  */
-export type GetAccessToPaperInstructionArgs = {
-  getAccessToPaper: GetAccessToPaper;
+export type MintResearchPaperInstructionArgs = {
+  mintResearchPaper: MintResearchPaper;
 };
 /**
  * @category Instructions
- * @category GetAccessToPaper
+ * @category MintResearchPaper
  * @category generated
  */
-export const GetAccessToPaperStruct = new beet.BeetArgsStruct<
-  GetAccessToPaperInstructionArgs & {
+export const MintResearchPaperStruct = new beet.FixableBeetArgsStruct<
+  MintResearchPaperInstructionArgs & {
     instructionDiscriminator: number;
   }
 >(
   [
     ["instructionDiscriminator", beet.u8],
-    ["getAccessToPaper", getAccessToPaperBeet],
+    ["mintResearchPaper", mintResearchPaperBeet],
   ],
-  "GetAccessToPaperInstructionArgs"
+  "MintResearchPaperInstructionArgs"
 );
 /**
- * Accounts required by the _GetAccessToPaper_ instruction
+ * Accounts required by the _MintResearchPaper_ instruction
  *
  * @property [_writable_, **signer**] readerAcc
  * @property [_writable_] researcherProfilePdaAcc
- * @property [_writable_] whitelistPdaAcc
+ * @property [_writable_] researchMintCollectionPdaAcc
  * @property [_writable_] paperPdaAcc
  * @property [] systemProgramAcc
  * @property [_writable_] feeReceiverAcc
  * @category Instructions
- * @category GetAccessToPaper
+ * @category MintResearchPaper
  * @category generated
  */
-export type GetAccessToPaperInstructionAccounts = {
+export type MintResearchPaperInstructionAccounts = {
   readerAcc: web3.PublicKey;
   researcherProfilePdaAcc: web3.PublicKey;
-  whitelistPdaAcc: web3.PublicKey;
+  researchMintCollectionPdaAcc: web3.PublicKey;
   paperPdaAcc: web3.PublicKey;
   systemProgramAcc: web3.PublicKey;
   feeReceiverAcc: web3.PublicKey;
 };
 
-export const getAccessToPaperInstructionDiscriminator = 4;
+export const mintResearchPaperInstructionDiscriminator = 4;
 
 /**
- * Creates a _GetAccessToPaper_ instruction.
+ * Creates a _MintResearchPaper_ instruction.
  *
  * @param accounts that will be accessed while the instruction is processed
  * @param args to provide as instruction data to the program
  *
  * @category Instructions
- * @category GetAccessToPaper
+ * @category MintResearchPaper
  * @category generated
  */
-export function createGetAccessToPaperInstruction(
-  accounts: GetAccessToPaperInstructionAccounts,
-  args: GetAccessToPaperInstructionArgs,
+export function createMintResearchPaperInstruction(
+  accounts: MintResearchPaperInstructionAccounts,
+  args: MintResearchPaperInstructionArgs,
   programId = new web3.PublicKey("C5M2JxBaxmsW62BgujPXEPytw65igtUjr6mFbD5pmypM")
 ) {
-  const [data] = GetAccessToPaperStruct.serialize({
-    instructionDiscriminator: getAccessToPaperInstructionDiscriminator,
+  const [data] = MintResearchPaperStruct.serialize({
+    instructionDiscriminator: mintResearchPaperInstructionDiscriminator,
     ...args,
   });
   const keys: web3.AccountMeta[] = [
@@ -91,7 +91,7 @@ export function createGetAccessToPaperInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.whitelistPdaAcc,
+      pubkey: accounts.researchMintCollectionPdaAcc,
       isWritable: true,
       isSigner: false,
     },

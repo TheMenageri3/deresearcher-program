@@ -8,7 +8,6 @@
 import * as web3 from '@solana/web3.js'
 import * as beetSolana from '@metaplex-foundation/beet-solana'
 import * as beet from '@metaplex-foundation/beet'
-import { Review, reviewBeet } from '../types/Review'
 
 /**
  * Arguments used to create {@link PeerReview}
@@ -19,8 +18,12 @@ export type PeerReviewArgs = {
   address: web3.PublicKey
   reviewerPubkey: web3.PublicKey
   paperPubkey: web3.PublicKey
-  review: Review
+  qualityOfResearch: number
+  potentialForRealWorldUseCase: number
+  domainKnowledge: number
+  practicalityOfResultObtained: number
   metaDataMerkleRoot: number[] /* size: 64 */
+  bump: number
 }
 /**
  * Holds the data for the {@link PeerReview} Account and provides de/serialization
@@ -34,8 +37,12 @@ export class PeerReview implements PeerReviewArgs {
     readonly address: web3.PublicKey,
     readonly reviewerPubkey: web3.PublicKey,
     readonly paperPubkey: web3.PublicKey,
-    readonly review: Review,
-    readonly metaDataMerkleRoot: number[] /* size: 64 */
+    readonly qualityOfResearch: number,
+    readonly potentialForRealWorldUseCase: number,
+    readonly domainKnowledge: number,
+    readonly practicalityOfResultObtained: number,
+    readonly metaDataMerkleRoot: number[] /* size: 64 */,
+    readonly bump: number
   ) {}
 
   /**
@@ -46,8 +53,12 @@ export class PeerReview implements PeerReviewArgs {
       args.address,
       args.reviewerPubkey,
       args.paperPubkey,
-      args.review,
-      args.metaDataMerkleRoot
+      args.qualityOfResearch,
+      args.potentialForRealWorldUseCase,
+      args.domainKnowledge,
+      args.practicalityOfResultObtained,
+      args.metaDataMerkleRoot,
+      args.bump
     )
   }
 
@@ -154,8 +165,12 @@ export class PeerReview implements PeerReviewArgs {
       address: this.address.toBase58(),
       reviewerPubkey: this.reviewerPubkey.toBase58(),
       paperPubkey: this.paperPubkey.toBase58(),
-      review: this.review,
+      qualityOfResearch: this.qualityOfResearch,
+      potentialForRealWorldUseCase: this.potentialForRealWorldUseCase,
+      domainKnowledge: this.domainKnowledge,
+      practicalityOfResultObtained: this.practicalityOfResultObtained,
       metaDataMerkleRoot: this.metaDataMerkleRoot,
+      bump: this.bump,
     }
   }
 }
@@ -169,8 +184,12 @@ export const peerReviewBeet = new beet.BeetStruct<PeerReview, PeerReviewArgs>(
     ['address', beetSolana.publicKey],
     ['reviewerPubkey', beetSolana.publicKey],
     ['paperPubkey', beetSolana.publicKey],
-    ['review', reviewBeet],
+    ['qualityOfResearch', beet.u8],
+    ['potentialForRealWorldUseCase', beet.u8],
+    ['domainKnowledge', beet.u8],
+    ['practicalityOfResultObtained', beet.u8],
     ['metaDataMerkleRoot', beet.uniformFixedSizeArray(beet.u8, 64)],
+    ['bump', beet.u8],
   ],
   PeerReview.fromArgs,
   'PeerReview'

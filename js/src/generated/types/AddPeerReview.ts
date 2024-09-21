@@ -11,20 +11,22 @@ export type AddPeerReview = {
   potentialForRealWorldUseCase: number
   domainKnowledge: number
   practicalityOfResultObtained: number
-  metaDataMerkleRoot: number[] /* size: 64 */
+  metaDataMerkleRoot: string
+  pdaBump: number
 }
 
 /**
  * @category userTypes
  * @category generated
  */
-export const addPeerReviewBeet = new beet.BeetArgsStruct<AddPeerReview>(
+export const addPeerReviewBeet = new beet.FixableBeetArgsStruct<AddPeerReview>(
   [
     ['qualityOfResearch', beet.u8],
     ['potentialForRealWorldUseCase', beet.u8],
     ['domainKnowledge', beet.u8],
     ['practicalityOfResultObtained', beet.u8],
-    ['metaDataMerkleRoot', beet.uniformFixedSizeArray(beet.u8, 64)],
+    ['metaDataMerkleRoot', beet.utf8String],
+    ['pdaBump', beet.u8],
   ],
   'AddPeerReview'
 )

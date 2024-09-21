@@ -1,5 +1,5 @@
 export * from './AddPeerReview'
 export * from './CreateResearchePaper'
 export * from './CreateResearcherProfile'
-export * from './GetAccessToPaper'
+export * from './MintResearchPaper'
 export * from './PublishPaper'

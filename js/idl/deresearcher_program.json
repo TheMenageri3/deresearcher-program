@@ -112,7 +112,14 @@
           ]
         }
       ],
-      "args": [],
+      "args": [
+        {
+          "name": "publishPaper",
+          "type": {
+            "defined": "PublishPaper"
+          }
+        }
+      ],
       "discriminant": {
         "type": "u8",
         "value": 2
@@ -168,7 +175,7 @@
       }
     },
     {
-      "name": "GetAccessToPaper",
+      "name": "MintResearchPaper",
       "accounts": [
         {
           "name": "readerAcc",
@@ -187,11 +194,11 @@
           ]
         },
         {
-          "name": "whitelistPdaAcc",
+          "name": "researchMintCollectionPdaAcc",
           "isMut": true,
           "isSigner": false,
           "docs": [
-            "Reader's whitelist PDA account"
+            "Reader's research mint collection PDA account"
           ]
         },
         {
@@ -221,9 +228,9 @@
       ],
       "args": [
         {
-          "name": "getAccessToPaper",
+          "name": "mintResearchPaper",
           "type": {
-            "defined": "GetAccessToPaper"
+            "defined": "MintResearchPaper"
           }
         }
       ],
@@ -248,7 +255,7 @@
             "type": {
               "array": [
                 "u8",
-                32
+                64
               ]
             }
           },
@@ -282,6 +289,10 @@
                 64
               ]
             }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
           }
         ]
       }
@@ -338,6 +349,10 @@
                 64
               ]
             }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
           }
         ]
       }
@@ -360,10 +375,20 @@
             "type": "publicKey"
           },
           {
-            "name": "review",
-            "type": {
-              "defined": "Review"
-            }
+            "name": "qualityOfResearch",
+            "type": "u8"
+          },
+          {
+            "name": "potentialForRealWorldUseCase",
+            "type": "u8"
+          },
+          {
+            "name": "domainKnowledge",
+            "type": "u8"
+          },
+          {
+            "name": "practicalityOfResultObtained",
+            "type": "u8"
           },
           {
             "name": "metaDataMerkleRoot",
@@ -373,12 +398,16 @@
                 64
               ]
             }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
           }
         ]
       }
     },
     {
-      "name": "ReaderWhitelist",
+      "name": "ResearchMintCollection",
       "type": {
         "kind": "struct",
         "fields": [
@@ -394,6 +423,10 @@
                 64
               ]
             }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
           }
         ]
       }
@@ -408,6 +441,10 @@
           {
             "name": "name",
             "type": "string"
+          },
+          {
+            "name": "pdaBump",
+            "type": "u8"
           }
         ]
       }
@@ -423,21 +460,27 @@
           },
           {
             "name": "paperContentHash",
-            "type": {
-              "array": [
-                "u8",
-                64
-              ]
-            }
+            "type": "string"
           },
           {
             "name": "metaDataMerkleRoot",
-            "type": {
-              "array": [
-                "u8",
-                64
-              ]
-            }
+            "type": "string"
+          },
+          {
+            "name": "pdaBump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "PublishPaper",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "pdaBump",
+            "type": "u8"
           }
         ]
       }
@@ -465,52 +508,26 @@
           },
           {
             "name": "metaDataMerkleRoot",
-            "type": {
-              "array": [
-                "u8",
-                64
-              ]
-            }
+            "type": "string"
+          },
+          {
+            "name": "pdaBump",
+            "type": "u8"
           }
         ]
       }
     },
     {
-      "name": "GetAccessToPaper",
+      "name": "MintResearchPaper",
       "type": {
         "kind": "struct",
         "fields": [
           {
             "name": "metaDataMerkleRoot",
-            "type": {
-              "array": [
-                "u8",
-                64
-              ]
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "Review",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "qualityOfResearch",
-            "type": "u8"
+            "type": "string"
           },
           {
-            "name": "potentialForRealWorldUseCase",
-            "type": "u8"
-          },
-          {
-            "name": "domainKnowledge",
-            "type": "u8"
-          },
-          {
-            "name": "practicalityOfResultObtained",
+            "name": "pdaBump",
             "type": "u8"
           }
         ]
@@ -627,6 +644,16 @@
       "code": 13,
       "name": "SizeOverflow",
       "msg": "Size overflow"
+    },
+    {
+      "code": 14,
+      "name": "ImmutableAccount",
+      "msg": "Account is Immutable"
+    },
+    {
+      "code": 15,
+      "name": "PdaPubekyMismatch",
+      "msg": "PDA pubkey mismatch"
     }
   ],
   "metadata": {

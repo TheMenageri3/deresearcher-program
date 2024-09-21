@@ -5,10 +5,26 @@ use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, pubke
 use crate::{
     error::DeResearcherError,
     instruction::{
-        AddPeerReview, CreateResearchePaper, CreateResearcherProfile, GetAccessToPaper,
-        ACCCOUNTS_DATA_OFFSET, MAX_STRING_SIZE, MIN_APPROVALS, RUST_STRING_ADDR_OFFSET,
+        AddPeerReview, CreateResearchePaper, CreateResearcherProfile, MintResearchPaper,
+        MAX_STRING_SIZE, MIN_APPROVALS,
     },
 };
+
+pub fn checked_string_convt_to_64_bytes(
+    data: &str,
+) -> Result<[u8; MAX_STRING_SIZE], DeResearcherError> {
+    if data.len() > MAX_STRING_SIZE {
+        return Err(DeResearcherError::SizeOverflow);
+    }
+
+    let mut data_bytes: [u8; MAX_STRING_SIZE] = [0; MAX_STRING_SIZE];
+
+    let end = data.len();
+
+    data_bytes[..end].copy_from_slice(data.as_bytes().as_ref());
+
+    Ok(data_bytes)
+}
 
 #[derive(Debug, BorshDeserialize, BorshSerialize, PartialEq, PartialOrd)]
 #[repr(u8)]
@@ -30,7 +46,7 @@ pub enum ResearcherProfileState {
 #[derive(Debug, BorshDeserialize, BorshSerialize, ShankAccount)]
 pub struct ResearcherProfile {
     pub address: Pubkey,                 // Researcher's public key 32 bytes
-    pub name: [u8; 32],                  // Researcher's name 32 bytes
+    pub name: [u8; 64],                  // Researcher's name 32 bytes
     pub state: ResearcherProfileState,   // Current state of the researcher 1 byte
     pub total_papers_published: u64,     // Total papers published 8 bytes
     pub total_citations: u64,            // Total citations 8 bytes
@@ -42,22 +58,14 @@ pub struct ResearcherProfile {
 
 impl ResearcherProfile {
     pub fn size() -> usize {
-        std::mem::size_of::<Self>()
+        32 + 64 + 1 + 8 + 8 + 8 + 1 + 64 + 1 //187
     }
 
     pub fn create_new(
         researcher_profile_pda_acc: &AccountInfo,
         data: CreateResearcherProfile,
     ) -> ProgramResult {
-        if data.name.len() > MAX_STRING_SIZE {
-            return Err(DeResearcherError::SizeOverflow.into());
-        }
-
-        let mut name_bytes: [u8; MAX_STRING_SIZE] = [0; MAX_STRING_SIZE];
-
-        name_bytes[..data.name.len()]
-            .copy_from_slice(&data.name.as_bytes()[RUST_STRING_ADDR_OFFSET..MAX_STRING_SIZE]);
-
+        let name_bytes = checked_string_convt_to_64_bytes(&data.name)?;
         let researcher_profile = Self {
             address: *researcher_profile_pda_acc.key,
             name: name_bytes,
@@ -74,7 +82,8 @@ impl ResearcherProfile {
 
         researcher_profile.serialize(&mut data_bytes)?;
 
-        researcher_profile_pda_acc.try_borrow_mut_data()?[ACCCOUNTS_DATA_OFFSET..]
+        researcher_profile_pda_acc
+            .try_borrow_mut_data()?
             .copy_from_slice(&data_bytes);
 
         Ok(())
@@ -97,7 +106,7 @@ pub struct ResearchPaper {
     pub state: PaperState,               // Current state of the paper 1 byte
     pub access_fee: u32,                 // Access fee for the paper 4 bytes
     pub version: u8,                     // Version of the paper 1 byte
-    pub paper_content_hash: [u8; 64],    // Hash of the paper's content 32 bytes
+    pub paper_content_hash: [u8; 64],    // Hash of the paper's content 64 bytes
     pub total_approvals: u8,             // Total approvals 1 byte
     pub total_citations: u64,            // Total citations 8 bytes
     pub meta_data_merkle_root: [u8; 64], // Data merkle root 64 bytes
@@ -106,7 +115,7 @@ pub struct ResearchPaper {
 
 impl ResearchPaper {
     pub fn size() -> usize {
-        std::mem::size_of::<Self>()
+        32 + 32 + 1 + 4 + 1 + 64 + 1 + 8 + 64 + 1 //208
     }
 
     pub fn create_new(
@@ -114,16 +123,20 @@ impl ResearchPaper {
         researcher_profile_pda_acc: &AccountInfo,
         data: CreateResearchePaper,
     ) -> ProgramResult {
+        let content_hash_bytes = checked_string_convt_to_64_bytes(&data.paper_content_hash)?;
+
+        let merkle_root_bytes = checked_string_convt_to_64_bytes(&data.meta_data_merkle_root)?;
+
         let research_paper = Self {
             address: *research_paper_pda_acc.key,
             creator_pubkey: *researcher_profile_pda_acc.key,
             state: PaperState::AwaitingPeerReview,
             access_fee: data.access_fee,
             version: 0,
-            paper_content_hash: data.paper_content_hash,
+            paper_content_hash: content_hash_bytes,
             total_approvals: 0,
             total_citations: 0,
-            meta_data_merkle_root: data.meta_data_merkle_root,
+            meta_data_merkle_root: merkle_root_bytes,
             bump: data.pda_bump,
         };
 
@@ -131,12 +144,12 @@ impl ResearchPaper {
 
         research_paper.serialize(&mut data_bytes)?;
 
-        research_paper_pda_acc.try_borrow_mut_data()?[ACCCOUNTS_DATA_OFFSET..]
+        research_paper_pda_acc
+            .try_borrow_mut_data()?
             .copy_from_slice(&data_bytes);
 
-        let mut researcher_profile = ResearcherProfile::try_from_slice(
-            &researcher_profile_pda_acc.try_borrow_data()?[ACCCOUNTS_DATA_OFFSET..],
-        )?;
+        let mut researcher_profile =
+            ResearcherProfile::try_from_slice(&researcher_profile_pda_acc.try_borrow_data()?)?;
 
         researcher_profile.total_papers_published += 1;
 
@@ -144,7 +157,8 @@ impl ResearchPaper {
 
         researcher_profile.serialize(&mut data_bytes)?;
 
-        researcher_profile_pda_acc.try_borrow_mut_data()?[ACCCOUNTS_DATA_OFFSET..]
+        researcher_profile_pda_acc
+            .try_borrow_mut_data()?
             .copy_from_slice(&data_bytes);
 
         Ok(())
@@ -154,9 +168,7 @@ impl ResearchPaper {
         paper_pda_acc: &AccountInfo,
         publisher_acc: &AccountInfo,
     ) -> ProgramResult {
-        let mut paper = ResearchPaper::try_from_slice(
-            &paper_pda_acc.try_borrow_data()?[ACCCOUNTS_DATA_OFFSET..],
-        )?;
+        let mut paper = ResearchPaper::try_from_slice(&paper_pda_acc.try_borrow_data()?)?;
 
         if paper.state != PaperState::AwaitingPeerReview {
             return Err(DeResearcherError::InvalidState.into());
@@ -176,37 +188,30 @@ impl ResearchPaper {
 
         paper.serialize(&mut data_bytes)?;
 
-        paper_pda_acc.try_borrow_mut_data()?[ACCCOUNTS_DATA_OFFSET..].copy_from_slice(&data_bytes);
+        paper_pda_acc
+            .try_borrow_mut_data()?
+            .copy_from_slice(&data_bytes);
 
         Ok(())
     }
 }
 
-#[derive(Debug, BorshDeserialize, BorshSerialize)]
-pub struct Review {
+#[derive(Debug, BorshDeserialize, BorshSerialize, ShankAccount)]
+pub struct PeerReview {
+    pub address: Pubkey,         // Peer Review Entry's public key 32 bytes
+    pub reviewer_pubkey: Pubkey, // Reviewer's public key 32 bytes
+    pub paper_pubkey: Pubkey,    // Paper's public key 32 bytes
     pub quality_of_research: u8, // Rating for quality of research (out of 100)
     pub potential_for_real_world_use_case: u8, // Rating for potential real-world use case (out of 100)
     pub domain_knowledge: u8,                  // Rating for domain knowledge (out of 100)
-    pub practicality_of_result_obtained: u8, // Rating for practicality of the result (out of 100)             // Comments from the peer reviewer
-}
-
-// pub struct MetaData{
-//   review_comments:String
-//}
-
-#[derive(Debug, BorshDeserialize, BorshSerialize, ShankAccount)]
-pub struct PeerReview {
-    pub address: Pubkey,                 // Peer Review Entry's public key 32 bytes
-    pub reviewer_pubkey: Pubkey,         // Reviewer's public key 32 bytes
-    pub paper_pubkey: Pubkey,            // Paper's public key 32 bytes
-    pub review: Review,                  // Review 1 byte
-    pub meta_data_merkle_root: [u8; 64], // Data merkle root 64 bytes
-    pub bump: u8,                        // Bump seed 1 byte
+    pub practicality_of_result_obtained: u8,   // Rating for practicality of the result (out of 100)
+    pub meta_data_merkle_root: [u8; 64],       // Data merkle root 64 bytes
+    pub bump: u8,                              // Bump seed 1 byte
 }
 
 impl PeerReview {
     pub fn size() -> usize {
-        std::mem::size_of::<Self>()
+        32 + 32 + 32 + 1 + 1 + 1 + 1 + 64 + 1 //165
     }
 
     pub fn create_new(
@@ -216,24 +221,24 @@ impl PeerReview {
         researcher_profile_pda_acc: &AccountInfo,
         data: AddPeerReview,
     ) -> ProgramResult {
+        let merkle_root_bytes = checked_string_convt_to_64_bytes(&data.meta_data_merkle_root)?;
+
         let peer_review = Self {
             address: *peer_review_pda_acc.key,
             reviewer_pubkey: *reviewer_acc.key,
             paper_pubkey: *paper_pda_acc.key,
-            review: Review {
-                quality_of_research: data.quality_of_research,
-                potential_for_real_world_use_case: data.potential_for_real_world_use_case,
-                domain_knowledge: data.domain_knowledge,
-                practicality_of_result_obtained: data.practicality_of_result_obtained,
-            },
-            meta_data_merkle_root: data.meta_data_merkle_root,
+            quality_of_research: data.quality_of_research,
+            potential_for_real_world_use_case: data.potential_for_real_world_use_case,
+            domain_knowledge: data.domain_knowledge,
+            practicality_of_result_obtained: data.practicality_of_result_obtained,
+            meta_data_merkle_root: merkle_root_bytes,
             bump: data.pda_bump,
         };
 
-        let cumulative_score = peer_review.review.quality_of_research
-            + peer_review.review.potential_for_real_world_use_case
-            + peer_review.review.domain_knowledge
-            + peer_review.review.practicality_of_result_obtained;
+        let cumulative_score = peer_review.quality_of_research
+            + peer_review.potential_for_real_world_use_case
+            + peer_review.domain_knowledge
+            + peer_review.practicality_of_result_obtained;
 
         let avg_score = cumulative_score / 4;
         let mut paper = ResearchPaper::try_from_slice(&paper_pda_acc.data.borrow())?;
@@ -256,12 +261,12 @@ impl PeerReview {
 
         peer_review.serialize(&mut data_bytes)?;
 
-        peer_review_pda_acc.try_borrow_mut_data()?[ACCCOUNTS_DATA_OFFSET..]
+        peer_review_pda_acc
+            .try_borrow_mut_data()?
             .copy_from_slice(&data_bytes);
 
-        let mut researcher_profile = ResearcherProfile::try_from_slice(
-            &researcher_profile_pda_acc.try_borrow_data()?[ACCCOUNTS_DATA_OFFSET..],
-        )?;
+        let mut researcher_profile =
+            ResearcherProfile::try_from_slice(&researcher_profile_pda_acc.try_borrow_data()?)?;
 
         researcher_profile.total_reviews += 1;
 
@@ -269,7 +274,8 @@ impl PeerReview {
 
         researcher_profile.serialize(&mut data_bytes)?;
 
-        researcher_profile_pda_acc.try_borrow_mut_data()?[ACCCOUNTS_DATA_OFFSET..]
+        researcher_profile_pda_acc
+            .try_borrow_mut_data()?
             .copy_from_slice(&data_bytes);
 
         Ok(())
@@ -277,35 +283,38 @@ impl PeerReview {
 }
 
 #[derive(Debug, BorshDeserialize, BorshSerialize, ShankAccount)]
-pub struct ReaderWhitelist {
+pub struct ResearchMintCollection {
     pub reader_pubkey: Pubkey,      // Reader's public key 32 bytes
     pub data_merkle_root: [u8; 64], // Data merkle root 64 bytes
     pub bump: u8,                   // Bump seed 1 byte
 }
 
-impl ReaderWhitelist {
+impl ResearchMintCollection {
     pub fn size() -> usize {
-        std::mem::size_of::<Self>()
+        32 + 64 + 1 //97
     }
 
-    pub fn access_paper(
-        whitelist_pda_acc: &AccountInfo,
+    pub fn mint_paper(
+        research_mint_collection_pda_acc: &AccountInfo,
         reader_acc: &AccountInfo,
         paper_pda_acc: &AccountInfo,
         researcher_profile_pda_acc: &AccountInfo,
-        data: GetAccessToPaper,
+        data: MintResearchPaper,
     ) -> ProgramResult {
-        let reader_whitelist = Self {
+        let merkle_root_bytes = checked_string_convt_to_64_bytes(&data.meta_data_merkle_root)?;
+
+        let research_mint_collection = Self {
             reader_pubkey: *reader_acc.key,
-            data_merkle_root: data.meta_data_merkle_root,
+            data_merkle_root: merkle_root_bytes,
             bump: data.pda_bump,
         };
 
         let mut data_bytes: Vec<u8> = Vec::new();
 
-        reader_whitelist.serialize(&mut data_bytes)?;
+        research_mint_collection.serialize(&mut data_bytes)?;
 
-        whitelist_pda_acc.try_borrow_mut_data()?[ACCCOUNTS_DATA_OFFSET..]
+        research_mint_collection_pda_acc
+            .try_borrow_mut_data()?
             .copy_from_slice(&data_bytes);
 
         let mut paper = ResearchPaper::try_from_slice(&paper_pda_acc.data.borrow())?;
@@ -324,9 +333,8 @@ impl ReaderWhitelist {
             .try_borrow_mut_data()?
             .copy_from_slice(&data_bytes);
 
-        let mut researcher_profile = ResearcherProfile::try_from_slice(
-            &researcher_profile_pda_acc.try_borrow_data()?[ACCCOUNTS_DATA_OFFSET..],
-        )?;
+        let mut researcher_profile =
+            ResearcherProfile::try_from_slice(&researcher_profile_pda_acc.try_borrow_data()?)?;
 
         researcher_profile.total_citations += 1;
 
@@ -334,7 +342,8 @@ impl ReaderWhitelist {
 
         researcher_profile.serialize(&mut data_bytes)?;
 
-        researcher_profile_pda_acc.try_borrow_mut_data()?[ACCCOUNTS_DATA_OFFSET..]
+        researcher_profile_pda_acc
+            .try_borrow_mut_data()?
             .copy_from_slice(&data_bytes);
 
         Ok(())

@@ -20,13 +20,14 @@ import {
  */
 export type ResearcherProfileArgs = {
   address: web3.PublicKey
-  name: number[] /* size: 32 */
+  name: number[] /* size: 64 */
   state: ResearcherProfileState
   totalPapersPublished: beet.bignum
   totalCitations: beet.bignum
   totalReviews: beet.bignum
   reputation: number
   metaDataMerkleRoot: number[] /* size: 64 */
+  bump: number
 }
 /**
  * Holds the data for the {@link ResearcherProfile} Account and provides de/serialization
@@ -38,13 +39,14 @@ export type ResearcherProfileArgs = {
 export class ResearcherProfile implements ResearcherProfileArgs {
   private constructor(
     readonly address: web3.PublicKey,
-    readonly name: number[] /* size: 32 */,
+    readonly name: number[] /* size: 64 */,
     readonly state: ResearcherProfileState,
     readonly totalPapersPublished: beet.bignum,
     readonly totalCitations: beet.bignum,
     readonly totalReviews: beet.bignum,
     readonly reputation: number,
-    readonly metaDataMerkleRoot: number[] /* size: 64 */
+    readonly metaDataMerkleRoot: number[] /* size: 64 */,
+    readonly bump: number
   ) {}
 
   /**
@@ -59,7 +61,8 @@ export class ResearcherProfile implements ResearcherProfileArgs {
       args.totalCitations,
       args.totalReviews,
       args.reputation,
-      args.metaDataMerkleRoot
+      args.metaDataMerkleRoot,
+      args.bump
     )
   }
 
@@ -201,6 +204,7 @@ export class ResearcherProfile implements ResearcherProfileArgs {
       })(),
       reputation: this.reputation,
       metaDataMerkleRoot: this.metaDataMerkleRoot,
+      bump: this.bump,
     }
   }
 }
@@ -215,13 +219,14 @@ export const researcherProfileBeet = new beet.BeetStruct<
 >(
   [
     ['address', beetSolana.publicKey],
-    ['name', beet.uniformFixedSizeArray(beet.u8, 32)],
+    ['name', beet.uniformFixedSizeArray(beet.u8, 64)],
     ['state', researcherProfileStateBeet],
     ['totalPapersPublished', beet.u64],
     ['totalCitations', beet.u64],
     ['totalReviews', beet.u64],
     ['reputation', beet.u8],
     ['metaDataMerkleRoot', beet.uniformFixedSizeArray(beet.u8, 64)],
+    ['bump', beet.u8],
   ],
   ResearcherProfile.fromArgs,
   'ResearcherProfile'

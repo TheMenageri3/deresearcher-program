@@ -8,8 +8,9 @@
 import * as beet from '@metaplex-foundation/beet'
 export type CreateResearchePaper = {
   accessFee: number
-  paperContentHash: number[] /* size: 64 */
-  metaDataMerkleRoot: number[] /* size: 64 */
+  paperContentHash: string
+  metaDataMerkleRoot: string
+  pdaBump: number
 }
 
 /**
@@ -17,11 +18,12 @@ export type CreateResearchePaper = {
  * @category generated
  */
 export const createResearchePaperBeet =
-  new beet.BeetArgsStruct<CreateResearchePaper>(
+  new beet.FixableBeetArgsStruct<CreateResearchePaper>(
     [
       ['accessFee', beet.u32],
-      ['paperContentHash', beet.uniformFixedSizeArray(beet.u8, 64)],
-      ['metaDataMerkleRoot', beet.uniformFixedSizeArray(beet.u8, 64)],
+      ['paperContentHash', beet.utf8String],
+      ['metaDataMerkleRoot', beet.utf8String],
+      ['pdaBump', beet.u8],
     ],
     'CreateResearchePaper'
   )

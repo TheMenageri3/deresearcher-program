@@ -16,7 +16,8 @@ use solana_program::{
 use crate::{
     error::DeResearcherError,
     state::{
-        PeerReview, ReaderWhitelist, ResearchPaper, ResearcherProfile, ResearcherProfileState,
+        PeerReview, ResearchMintCollection, ResearchPaper, ResearcherProfile,
+        ResearcherProfileState,
     },
 };
 
@@ -25,7 +26,7 @@ pub const MIN_APPROVALS: u8 = 10;
 const RESEARCH_PAPER_PDA_SEED: &[u8] = b"deres_paper";
 const PEER_REVIEW_PDA_SEED: &[u8] = b"deres_review";
 
-const WHITELIST_PDA_SEED: &[u8] = b"deres_whitelist";
+const RESEARCH_MINT_COLLECTION_PDA_SEED: &[u8] = b"deres_mint_collection";
 
 const RESEARCHER_PROFILE_PDA_SEED: &[u8] = b"deres_profile";
 
@@ -33,9 +34,7 @@ const _MAX_REPUTATION: u8 = 100;
 
 const _MIN_REPUTATION_FOR_PEER_REVIEW: u8 = 50;
 
-pub const MAX_STRING_SIZE: usize = 32;
-
-pub const ACCCOUNTS_DATA_OFFSET: usize = 6;
+pub const MAX_STRING_SIZE: usize = 64;
 
 pub const RUST_STRING_ADDR_OFFSET: usize = 6;
 
@@ -74,8 +73,8 @@ pub struct CreateResearcherProfile {
 #[derive(BorshSerialize, BorshDeserialize, Debug)]
 pub struct CreateResearchePaper {
     pub access_fee: u32,
-    pub paper_content_hash: [u8; 64],
-    pub meta_data_merkle_root: [u8; 64],
+    pub paper_content_hash: String,
+    pub meta_data_merkle_root: String,
     pub pda_bump: u8,
 }
 
@@ -90,13 +89,13 @@ pub struct AddPeerReview {
     pub potential_for_real_world_use_case: u8,
     pub domain_knowledge: u8,
     pub practicality_of_result_obtained: u8,
-    pub meta_data_merkle_root: [u8; 64],
+    pub meta_data_merkle_root: String,
     pub pda_bump: u8,
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Debug)]
-pub struct GetAccessToPaper {
-    pub meta_data_merkle_root: [u8; 64],
+pub struct MintResearchPaper {
+    pub meta_data_merkle_root: String,
     pub pda_bump: u8,
 }
 
@@ -183,8 +182,8 @@ pub enum DeResearcherInstruction {
     #[account(
         2,
         writable,
-        name = "whitelist_pda_acc",
-        desc = "Reader's whitelist PDA account"
+        name = "research_mint_collection_pda_acc",
+        desc = "Reader's research mint collection PDA account"
     )]
     #[account(
         3,
@@ -199,7 +198,7 @@ pub enum DeResearcherInstruction {
         name = "fee_receiver_acc",
         desc = "Fee receiver's account"
     )]
-    GetAccessToPaper(GetAccessToPaper),
+    MintResearchPaper(MintResearchPaper),
 }
 
 fn validate_create_researcher_profile_accounts(
@@ -242,7 +241,7 @@ pub fn create_researcher_profile_ix(
 
     let rent = Rent::get()?;
 
-    let rent_exempt = rent.minimum_balance(ResearchPaper::size());
+    let rent_exempt = rent.minimum_balance(ResearcherProfile::size());
 
     let create_researcher_profile_ix = system_instruction::create_account(
         researcher_acc.key,
@@ -319,10 +318,13 @@ pub fn create_research_paper_ix(
 
     let researcher_profile_pda = researcher_profile_pda_acc.key;
 
+    let researcher_profile =
+        ResearcherProfile::try_from_slice(&researcher_profile_pda_acc.data.borrow())?;
+
     validate_pda(
         researcher_profile_seeds,
         researcher_profile_pda,
-        data.pda_bump,
+        researcher_profile.bump,
         program_id,
     )?;
 
@@ -566,12 +568,12 @@ pub fn add_peer_review_ix(
     Ok(())
 }
 
-fn validate_get_access_accounts(
+fn validate_mint_res_paper_accounts(
     reader_acc: &AccountInfo,
     researcher_profile_pda_acc: &AccountInfo,
-    whitelist_pda_acc: &AccountInfo,
+    research_mint_collection_pda_acc: &AccountInfo,
     paper_pda_acc: &AccountInfo,
-    whitelist_pda: &Pubkey,
+    research_mint_collection_pda: &Pubkey,
     paper_pda: &Pubkey,
     fee_receiver_acc: &AccountInfo,
 ) -> Result<(), DeResearcherError> {
@@ -587,7 +589,7 @@ fn validate_get_access_accounts(
         return Err(DeResearcherError::PaperNotFound);
     }
 
-    if whitelist_pda.ne(whitelist_pda_acc.key) {
+    if research_mint_collection_pda.ne(research_mint_collection_pda_acc.key) {
         return Err(DeResearcherError::PubkeyMismatch.into());
     }
 
@@ -602,10 +604,10 @@ fn validate_get_access_accounts(
     Ok(())
 }
 
-pub fn get_access_ix(
+pub fn mint_res_paper_ix(
     program_id: &Pubkey,
     accounts: &[AccountInfo],
-    data: GetAccessToPaper,
+    data: MintResearchPaper,
 ) -> ProgramResult {
     msg!("Instruction: GetAccess");
     let accounts_iter = &mut accounts.iter();
@@ -614,15 +616,21 @@ pub fn get_access_ix(
 
     let researcher_profile_pda_acc = next_account_info(accounts_iter)?;
 
-    let whitelist_pda_acc = next_account_info(accounts_iter)?;
+    let research_mint_collection_pda_acc = next_account_info(accounts_iter)?;
 
     let paper_pda_acc = next_account_info(accounts_iter)?;
 
-    let whitelist_pda = whitelist_pda_acc.key;
+    let research_mint_collection_pda = research_mint_collection_pda_acc.key;
 
-    let whitelist_seeds = vec![WHITELIST_PDA_SEED, reader_acc.key.as_ref()];
+    let res_mint_collection_seeds =
+        vec![RESEARCH_MINT_COLLECTION_PDA_SEED, reader_acc.key.as_ref()];
 
-    validate_pda(whitelist_seeds, whitelist_pda, data.pda_bump, program_id)?;
+    validate_pda(
+        res_mint_collection_seeds,
+        research_mint_collection_pda,
+        data.pda_bump,
+        program_id,
+    )?;
 
     let paper_pda = paper_pda_acc.key;
 
@@ -638,35 +646,35 @@ pub fn get_access_ix(
 
     let fee_receiver_acc = next_account_info(accounts_iter)?;
 
-    validate_get_access_accounts(
+    validate_mint_res_paper_accounts(
         reader_acc,
         researcher_profile_pda_acc,
-        whitelist_pda_acc,
+        research_mint_collection_pda_acc,
         paper_pda_acc,
-        &whitelist_pda,
+        &research_mint_collection_pda,
         &paper_pda,
         fee_receiver_acc,
     )?;
 
-    if whitelist_pda_acc.data_is_empty() {
-        let create_whitelist_ix = system_instruction::create_account(
+    if research_mint_collection_pda_acc.data_is_empty() {
+        let create_res_mint_collection_ix = system_instruction::create_account(
             reader_acc.key,
-            whitelist_pda_acc.key,
-            Rent::get()?.minimum_balance(ReaderWhitelist::size() as usize),
-            ReaderWhitelist::size() as u64,
+            research_mint_collection_pda_acc.key,
+            Rent::get()?.minimum_balance(ResearchMintCollection::size() as usize),
+            ResearchMintCollection::size() as u64,
             program_id,
         );
 
         let system_program_acc = next_account_info(accounts_iter)?;
         invoke_signed(
-            &create_whitelist_ix,
+            &create_res_mint_collection_ix,
             &[
                 reader_acc.clone(),
-                whitelist_pda_acc.clone(),
+                research_mint_collection_pda_acc.clone(),
                 system_program_acc.clone(),
             ],
             &[&[
-                WHITELIST_PDA_SEED,
+                RESEARCH_MINT_COLLECTION_PDA_SEED,
                 reader_acc.key.as_ref(),
                 &[data.pda_bump],
             ]],
@@ -675,17 +683,19 @@ pub fn get_access_ix(
 
     let paper = ResearchPaper::try_from_slice(&paper_pda_acc.data.borrow())?;
 
-    invoke(
-        &system_instruction::transfer(
-            reader_acc.key,
-            &paper.creator_pubkey,
-            paper.access_fee as u64,
-        ),
-        &[reader_acc.clone(), fee_receiver_acc.clone()],
-    )?;
+    if paper.access_fee > 0 {
+        invoke(
+            &system_instruction::transfer(
+                reader_acc.key,
+                &paper.creator_pubkey,
+                paper.access_fee as u64,
+            ),
+            &[reader_acc.clone(), fee_receiver_acc.clone()],
+        )?;
+    }
 
-    ReaderWhitelist::access_paper(
-        whitelist_pda_acc,
+    ResearchMintCollection::mint_paper(
+        research_mint_collection_pda_acc,
         reader_acc,
         paper_pda_acc,
         researcher_profile_pda_acc,

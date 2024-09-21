@@ -5,53 +5,59 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as web3 from '@solana/web3.js'
-import * as beetSolana from '@metaplex-foundation/beet-solana'
-import * as beet from '@metaplex-foundation/beet'
+import * as web3 from "@solana/web3.js";
+import * as beetSolana from "@metaplex-foundation/beet-solana";
+import * as beet from "@metaplex-foundation/beet";
 
 /**
- * Arguments used to create {@link ReaderWhitelist}
+ * Arguments used to create {@link ResearchMintCollection}
  * @category Accounts
  * @category generated
  */
-export type ReaderWhitelistArgs = {
-  readerPubkey: web3.PublicKey
-  dataMerkleRoot: number[] /* size: 64 */
-}
+export type ResearchMintCollectionArgs = {
+  readerPubkey: web3.PublicKey;
+  dataMerkleRoot: number[] /* size: 64 */;
+  bump: number;
+};
 /**
- * Holds the data for the {@link ReaderWhitelist} Account and provides de/serialization
+ * Holds the data for the {@link ResearchMintCollection} Account and provides de/serialization
  * functionality for that data
  *
  * @category Accounts
  * @category generated
  */
-export class ReaderWhitelist implements ReaderWhitelistArgs {
+export class ResearchMintCollection implements ResearchMintCollectionArgs {
   private constructor(
     readonly readerPubkey: web3.PublicKey,
-    readonly dataMerkleRoot: number[] /* size: 64 */
+    readonly dataMerkleRoot: number[] /* size: 64 */,
+    readonly bump: number
   ) {}
 
   /**
-   * Creates a {@link ReaderWhitelist} instance from the provided args.
+   * Creates a {@link ResearchMintCollection} instance from the provided args.
    */
-  static fromArgs(args: ReaderWhitelistArgs) {
-    return new ReaderWhitelist(args.readerPubkey, args.dataMerkleRoot)
+  static fromArgs(args: ResearchMintCollectionArgs) {
+    return new ResearchMintCollection(
+      args.readerPubkey,
+      args.dataMerkleRoot,
+      args.bump
+    );
   }
 
   /**
-   * Deserializes the {@link ReaderWhitelist} from the data of the provided {@link web3.AccountInfo}.
+   * Deserializes the {@link ResearchMintCollection} from the data of the provided {@link web3.AccountInfo}.
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
   static fromAccountInfo(
     accountInfo: web3.AccountInfo<Buffer>,
     offset = 0
-  ): [ReaderWhitelist, number] {
-    return ReaderWhitelist.deserialize(accountInfo.data, offset)
+  ): [ResearchMintCollection, number] {
+    return ResearchMintCollection.deserialize(accountInfo.data, offset);
   }
 
   /**
    * Retrieves the account info from the provided address and deserializes
-   * the {@link ReaderWhitelist} from its data.
+   * the {@link ResearchMintCollection} from its data.
    *
    * @throws Error if no account info is found at the address or if deserialization fails
    */
@@ -59,15 +65,17 @@ export class ReaderWhitelist implements ReaderWhitelistArgs {
     connection: web3.Connection,
     address: web3.PublicKey,
     commitmentOrConfig?: web3.Commitment | web3.GetAccountInfoConfig
-  ): Promise<ReaderWhitelist> {
+  ): Promise<ResearchMintCollection> {
     const accountInfo = await connection.getAccountInfo(
       address,
       commitmentOrConfig
-    )
+    );
     if (accountInfo == null) {
-      throw new Error(`Unable to find ReaderWhitelist account at ${address}`)
+      throw new Error(
+        `Unable to find ResearchMintCollection account at ${address}`
+      );
     }
-    return ReaderWhitelist.fromAccountInfo(accountInfo, 0)[0]
+    return ResearchMintCollection.fromAccountInfo(accountInfo, 0)[0];
   }
 
   /**
@@ -78,39 +86,45 @@ export class ReaderWhitelist implements ReaderWhitelistArgs {
    */
   static gpaBuilder(
     programId: web3.PublicKey = new web3.PublicKey(
-      'C5M2JxBaxmsW62BgujPXEPytw65igtUjr6mFbD5pmypM'
+      "C5M2JxBaxmsW62BgujPXEPytw65igtUjr6mFbD5pmypM"
     )
   ) {
-    return beetSolana.GpaBuilder.fromStruct(programId, readerWhitelistBeet)
+    return beetSolana.GpaBuilder.fromStruct(
+      programId,
+      researchMintCollectionBeet
+    );
   }
 
   /**
-   * Deserializes the {@link ReaderWhitelist} from the provided data Buffer.
+   * Deserializes the {@link ResearchMintCollection} from the provided data Buffer.
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
-  static deserialize(buf: Buffer, offset = 0): [ReaderWhitelist, number] {
-    return readerWhitelistBeet.deserialize(buf, offset)
+  static deserialize(
+    buf: Buffer,
+    offset = 0
+  ): [ResearchMintCollection, number] {
+    return researchMintCollectionBeet.deserialize(buf, offset);
   }
 
   /**
-   * Serializes the {@link ReaderWhitelist} into a Buffer.
+   * Serializes the {@link ResearchMintCollection} into a Buffer.
    * @returns a tuple of the created Buffer and the offset up to which the buffer was written to store it.
    */
   serialize(): [Buffer, number] {
-    return readerWhitelistBeet.serialize(this)
+    return researchMintCollectionBeet.serialize(this);
   }
 
   /**
    * Returns the byteSize of a {@link Buffer} holding the serialized data of
-   * {@link ReaderWhitelist}
+   * {@link ResearchMintCollection}
    */
   static get byteSize() {
-    return readerWhitelistBeet.byteSize
+    return researchMintCollectionBeet.byteSize;
   }
 
   /**
    * Fetches the minimum balance needed to exempt an account holding
-   * {@link ReaderWhitelist} data from rent
+   * {@link ResearchMintCollection} data from rent
    *
    * @param connection used to retrieve the rent exemption information
    */
@@ -119,28 +133,29 @@ export class ReaderWhitelist implements ReaderWhitelistArgs {
     commitment?: web3.Commitment
   ): Promise<number> {
     return connection.getMinimumBalanceForRentExemption(
-      ReaderWhitelist.byteSize,
+      ResearchMintCollection.byteSize,
       commitment
-    )
+    );
   }
 
   /**
    * Determines if the provided {@link Buffer} has the correct byte size to
-   * hold {@link ReaderWhitelist} data.
+   * hold {@link ResearchMintCollection} data.
    */
   static hasCorrectByteSize(buf: Buffer, offset = 0) {
-    return buf.byteLength - offset === ReaderWhitelist.byteSize
+    return buf.byteLength - offset === ResearchMintCollection.byteSize;
   }
 
   /**
-   * Returns a readable version of {@link ReaderWhitelist} properties
+   * Returns a readable version of {@link ResearchMintCollection} properties
    * and can be used to convert to JSON and/or logging
    */
   pretty() {
     return {
       readerPubkey: this.readerPubkey.toBase58(),
       dataMerkleRoot: this.dataMerkleRoot,
-    }
+      bump: this.bump,
+    };
   }
 }
 
@@ -148,14 +163,15 @@ export class ReaderWhitelist implements ReaderWhitelistArgs {
  * @category Accounts
  * @category generated
  */
-export const readerWhitelistBeet = new beet.BeetStruct<
-  ReaderWhitelist,
-  ReaderWhitelistArgs
+export const researchMintCollectionBeet = new beet.BeetStruct<
+  ResearchMintCollection,
+  ResearchMintCollectionArgs
 >(
   [
-    ['readerPubkey', beetSolana.publicKey],
-    ['dataMerkleRoot', beet.uniformFixedSizeArray(beet.u8, 64)],
+    ["readerPubkey", beetSolana.publicKey],
+    ["dataMerkleRoot", beet.uniformFixedSizeArray(beet.u8, 64)],
+    ["bump", beet.u8],
   ],
-  ReaderWhitelist.fromArgs,
-  'ReaderWhitelist'
-)
+  ResearchMintCollection.fromArgs,
+  "ResearchMintCollection"
+);

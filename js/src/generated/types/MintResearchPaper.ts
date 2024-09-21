@@ -6,8 +6,8 @@
  */
 
 import * as beet from '@metaplex-foundation/beet'
-export type CreateResearcherProfile = {
-  name: string
+export type MintResearchPaper = {
+  metaDataMerkleRoot: string
   pdaBump: number
 }
 
@@ -15,11 +15,11 @@ export type CreateResearcherProfile = {
  * @category userTypes
  * @category generated
  */
-export const createResearcherProfileBeet =
-  new beet.FixableBeetArgsStruct<CreateResearcherProfile>(
+export const mintResearchPaperBeet =
+  new beet.FixableBeetArgsStruct<MintResearchPaper>(
     [
-      ['name', beet.utf8String],
+      ['metaDataMerkleRoot', beet.utf8String],
       ['pdaBump', beet.u8],
     ],
-    'CreateResearcherProfile'
+    'MintResearchPaper'
   )

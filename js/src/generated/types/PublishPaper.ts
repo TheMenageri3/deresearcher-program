@@ -6,15 +6,15 @@
  */
 
 import * as beet from '@metaplex-foundation/beet'
-export type GetAccessToPaper = {
-  metaDataMerkleRoot: number[] /* size: 64 */
+export type PublishPaper = {
+  pdaBump: number
 }
 
 /**
  * @category userTypes
  * @category generated
  */
-export const getAccessToPaperBeet = new beet.BeetArgsStruct<GetAccessToPaper>(
-  [['metaDataMerkleRoot', beet.uniformFixedSizeArray(beet.u8, 64)]],
-  'GetAccessToPaper'
+export const publishPaperBeet = new beet.BeetArgsStruct<PublishPaper>(
+  [['pdaBump', beet.u8]],
+  'PublishPaper'
 )

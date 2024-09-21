@@ -322,6 +322,52 @@ createErrorFromCodeLookup.set(0xd, () => new SizeOverflowError())
 createErrorFromNameLookup.set('SizeOverflow', () => new SizeOverflowError())
 
 /**
+ * ImmutableAccount: 'Account is Immutable'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class ImmutableAccountError extends Error {
+  readonly code: number = 0xe
+  readonly name: string = 'ImmutableAccount'
+  constructor() {
+    super('Account is Immutable')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, ImmutableAccountError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xe, () => new ImmutableAccountError())
+createErrorFromNameLookup.set(
+  'ImmutableAccount',
+  () => new ImmutableAccountError()
+)
+
+/**
+ * PdaPubekyMismatch: 'PDA pubkey mismatch'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class PdaPubekyMismatchError extends Error {
+  readonly code: number = 0xf
+  readonly name: string = 'PdaPubekyMismatch'
+  constructor() {
+    super('PDA pubkey mismatch')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, PdaPubekyMismatchError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0xf, () => new PdaPubekyMismatchError())
+createErrorFromNameLookup.set(
+  'PdaPubekyMismatch',
+  () => new PdaPubekyMismatchError()
+)
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

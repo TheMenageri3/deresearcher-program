@@ -22,7 +22,7 @@ export type AddPeerReviewInstructionArgs = {
  * @category AddPeerReview
  * @category generated
  */
-export const AddPeerReviewStruct = new beet.BeetArgsStruct<
+export const AddPeerReviewStruct = new beet.FixableBeetArgsStruct<
   AddPeerReviewInstructionArgs & {
     instructionDiscriminator: number;
   }

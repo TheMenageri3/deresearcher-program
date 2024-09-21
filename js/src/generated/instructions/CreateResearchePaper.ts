@@ -25,7 +25,7 @@ export type CreateResearchePaperInstructionArgs = {
  * @category CreateResearchePaper
  * @category generated
  */
-export const CreateResearchePaperStruct = new beet.BeetArgsStruct<
+export const CreateResearchePaperStruct = new beet.FixableBeetArgsStruct<
   CreateResearchePaperInstructionArgs & {
     instructionDiscriminator: number;
   }

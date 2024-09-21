@@ -25,6 +25,7 @@ export type ResearchPaperArgs = {
   totalApprovals: number
   totalCitations: beet.bignum
   metaDataMerkleRoot: number[] /* size: 64 */
+  bump: number
 }
 /**
  * Holds the data for the {@link ResearchPaper} Account and provides de/serialization
@@ -43,7 +44,8 @@ export class ResearchPaper implements ResearchPaperArgs {
     readonly paperContentHash: number[] /* size: 64 */,
     readonly totalApprovals: number,
     readonly totalCitations: beet.bignum,
-    readonly metaDataMerkleRoot: number[] /* size: 64 */
+    readonly metaDataMerkleRoot: number[] /* size: 64 */,
+    readonly bump: number
   ) {}
 
   /**
@@ -59,7 +61,8 @@ export class ResearchPaper implements ResearchPaperArgs {
       args.paperContentHash,
       args.totalApprovals,
       args.totalCitations,
-      args.metaDataMerkleRoot
+      args.metaDataMerkleRoot,
+      args.bump
     )
   }
 
@@ -182,6 +185,7 @@ export class ResearchPaper implements ResearchPaperArgs {
         return x
       })(),
       metaDataMerkleRoot: this.metaDataMerkleRoot,
+      bump: this.bump,
     }
   }
 }
@@ -204,6 +208,7 @@ export const researchPaperBeet = new beet.BeetStruct<
     ['totalApprovals', beet.u8],
     ['totalCitations', beet.u64],
     ['metaDataMerkleRoot', beet.uniformFixedSizeArray(beet.u8, 64)],
+    ['bump', beet.u8],
   ],
   ResearchPaper.fromArgs,
   'ResearchPaper'
