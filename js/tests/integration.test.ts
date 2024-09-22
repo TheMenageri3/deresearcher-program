@@ -69,7 +69,7 @@ describe("Integration tests", () => {
 
       console.log("Transaction signature", txSig);
 
-      await connection.confirmTransaction(txSig, "finalized");
+      await connection.confirmTransaction(txSig, "confirmed");
 
       console.log(txSig);
     } catch (e) {
@@ -87,7 +87,10 @@ describe("Integration tests", () => {
       const [researcherProfilePda, bump] =
         solana.PublicKey.findProgramAddressSync(seeds, sdk.PROGRAM_ID);
 
-      let acc_info = await connection.getAccountInfo(researcherProfilePda);
+      let acc_info = await connection.getAccountInfo(
+        researcherProfilePda,
+        "confirmed"
+      );
 
       if (!acc_info) {
         console.error("Account not found");
@@ -157,10 +160,10 @@ describe("Integration tests", () => {
       tx.sign(localWallet);
 
       const txSig = await connection.sendRawTransaction(tx.serialize(), {
-        preflightCommitment: "finalized",
+        preflightCommitment: "confirmed",
       });
 
-      await connection.confirmTransaction(txSig, "finalized");
+      await connection.confirmTransaction(txSig, "confirmed");
 
       console.log("Transaction signature", txSig);
     } catch (e) {
@@ -185,7 +188,7 @@ describe("Integration tests", () => {
 
       console.log("Paper pda", paperPda.toBase58());
 
-      let acc_info = await connection.getAccountInfo(paperPda);
+      let acc_info = await connection.getAccountInfo(paperPda, "confirmed");
 
       if (!acc_info) {
         console.error("Account not found");
@@ -195,6 +198,52 @@ describe("Integration tests", () => {
       const [acc, _id] =
         sdk.accountProviders.ResearchPaper.fromAccountInfo(acc_info);
       console.log(acc.pretty());
+    } catch (e) {
+      console.error(e);
+    }
+  });
+
+  it("Approve researcher to add peer review", async () => {
+    try {
+      const checkerWallet = getLocalWallet();
+
+      const researcherProfilePda = solana.PublicKey.findProgramAddressSync(
+        [
+          Buffer.from("deres_researcher_profile"),
+          localWallet.publicKey.toBuffer(),
+        ],
+        sdk.PROGRAM_ID
+      )[0];
+
+      let ix = sdk.createCheckAndAssignReputationInstruction(
+        {
+          reputationCheckerAcc: checkerWallet.publicKey,
+          researcherProfilePdaAcc: researcherProfilePda,
+        },
+        {
+          checkAndAssignReputation: {
+            reputation: 100,
+          },
+        }
+      );
+
+      const tx = new solana.Transaction().add(ix);
+
+      const blockhashWithHeight = await connection.getLatestBlockhash();
+
+      tx.recentBlockhash = blockhashWithHeight.blockhash;
+
+      tx.feePayer = checkerWallet.publicKey;
+
+      tx.sign(checkerWallet);
+
+      const txSig = await connection.sendRawTransaction(tx.serialize(), {
+        preflightCommitment: "confirmed",
+      });
+
+      await connection.confirmTransaction(txSig, "confirmed");
+
+      console.log("Transaction signature", txSig);
     } catch (e) {
       console.error(e);
     }
@@ -269,10 +318,10 @@ describe("Integration tests", () => {
       tx.sign(localWallet);
 
       const txSig = await connection.sendRawTransaction(tx.serialize(), {
-        preflightCommitment: "finalized",
+        preflightCommitment: "confirmed",
       });
 
-      await connection.confirmTransaction(txSig, "finalized");
+      await connection.confirmTransaction(txSig, "confirmed");
 
       console.log("Transaction signature", txSig);
     } catch (e) {
@@ -320,10 +369,10 @@ describe("Integration tests", () => {
       tx.sign(localWallet);
 
       const txSig = await connection.sendRawTransaction(tx.serialize(), {
-        preflightCommitment: "finalized",
+        preflightCommitment: "confirmed",
       });
 
-      await connection.confirmTransaction(txSig, "finalized");
+      await connection.confirmTransaction(txSig, "confirmed");
 
       console.log("Transaction signature", txSig);
     } catch (e) {
@@ -400,10 +449,10 @@ describe("Integration tests", () => {
       tx.sign(localWallet);
 
       const txSig = await connection.sendRawTransaction(tx.serialize(), {
-        preflightCommitment: "finalized",
+        preflightCommitment: "confirmed",
       });
 
-      await connection.confirmTransaction(txSig, "finalized");
+      await connection.confirmTransaction(txSig, "confirmed");
 
       console.log("Transaction signature", txSig);
     } catch (e) {
@@ -428,7 +477,7 @@ describe("Integration tests", () => {
 
       console.log("Paper pda", paperPda.toBase58());
 
-      let acc_info = await connection.getAccountInfo(paperPda);
+      let acc_info = await connection.getAccountInfo(paperPda, "confirmed");
 
       if (!acc_info) {
         console.error("Account not found");
@@ -438,6 +487,8 @@ describe("Integration tests", () => {
       const [acc, _id] =
         sdk.accountProviders.ResearchPaper.fromAccountInfo(acc_info);
       console.log(acc.pretty());
+
+      console.log("Minted research paper", acc.pretty());
 
       const researchMintCollectionPda = solana.PublicKey.findProgramAddressSync(
         [
@@ -453,7 +504,8 @@ describe("Integration tests", () => {
       );
 
       const acc_info2 = await connection.getAccountInfo(
-        researchMintCollectionPda
+        researchMintCollectionPda,
+        "confirmed"
       );
 
       if (!acc_info2) {

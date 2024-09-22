@@ -28,13 +28,21 @@ const RESEARCH_MINT_COLLECTION_PDA_SEED: &[u8] = b"deres_mint_collection";
 
 const RESEARCHER_PROFILE_PDA_SEED: &[u8] = b"deres_researcher_profile";
 
-const _MAX_REPUTATION: u8 = 100;
+pub const MAX_REPUTATION: u8 = 100;
 
-const _MIN_REPUTATION_FOR_PEER_REVIEW: u8 = 50;
+pub const MIN_REPUTATION_FOR_PEER_REVIEW: u8 = 50;
 
 pub const MAX_STRING_SIZE: usize = 64;
 
+// TODO: change this to 5
 pub const MIN_APPROVALS_FOR_PUBLISH: u8 = 1;
+
+pub const REPUTATION_CHECKER_ADDR: [u8; 32] = [
+    169, 0, 98, 218, 109, 191, 169, 52, 91, 62, 13, 120, 87, 111, 105, 218, 157, 129, 43, 117, 250,
+    6, 176, 236, 145, 237, 44, 88, 60, 29, 189, 169,
+];
+
+pub const REPUTATION_CHECKER_PUBKEY: Pubkey = Pubkey::new_from_array(REPUTATION_CHECKER_ADDR);
 
 pub fn validate_pda(
     seeds: Vec<&[u8]>,
@@ -95,6 +103,11 @@ pub struct AddPeerReview {
 pub struct MintResearchPaper {
     pub meta_data_merkle_root: String,
     pub pda_bump: u8,
+}
+
+#[derive(BorshSerialize, BorshDeserialize, Debug)]
+pub struct CheckAndAssignReputation {
+    pub reputation: u8,
 }
 
 #[derive(BorshSerialize, BorshDeserialize, Debug, ShankInstruction)]
@@ -198,6 +211,20 @@ pub enum DeResearcherInstruction {
     )]
     #[account(5, name = "system_program_acc", desc = "System program account")]
     MintResearchPaper(MintResearchPaper),
+    #[account(
+        0,
+        writable,
+        signer,
+        name = "reputation_checker_acc",
+        desc = "Reputation checker's account"
+    )]
+    #[account(
+        1,
+        writable,
+        name = "researcher_profile_pda_acc",
+        desc = "Researcher's profile account"
+    )]
+    CheckAndAssignReputation(CheckAndAssignReputation),
 }
 
 fn validate_create_researcher_profile_accounts(
@@ -218,6 +245,8 @@ fn validate_create_researcher_profile_accounts(
 
     Ok(())
 }
+
+// Create a new researcher profile
 
 pub fn create_researcher_profile_ix(
     program_id: &Pubkey,
@@ -288,6 +317,8 @@ fn validate_create_research_paper_accounts(
 
     Ok(())
 }
+
+// Create a new research paper
 
 pub fn create_research_paper_ix(
     program_id: &Pubkey,
@@ -391,6 +422,8 @@ fn validate_publish_paper_accounts(
     Ok(())
 }
 
+// Publish a research paper
+
 pub fn publish_paper_ix(
     program_id: &Pubkey,
     accounts: &[AccountInfo],
@@ -453,13 +486,14 @@ fn validate_add_peer_review_accounts(
 fn validate_researcher_for_peer_review(
     researcher_profile: &ResearcherProfile,
 ) -> Result<(), DeResearcherError> {
-    //TODO : Implement this
-    // if researcher_profile.state != ResearcherProfileState::Approved {
-    //     return Err(DeResearcherError::NotAllowedForPeerReview);
-    // }
+    if researcher_profile.state != ResearcherProfileState::Approved {
+        return Err(DeResearcherError::NotAllowedForPeerReview);
+    }
 
     Ok(())
 }
+
+// Add a peer review to a research paper
 
 pub fn add_peer_review_ix(
     program_id: &Pubkey,
@@ -601,6 +635,8 @@ fn validate_mint_res_paper_accounts(
     Ok(())
 }
 
+// Mint a research paper
+
 pub fn mint_res_paper_ix(
     program_id: &Pubkey,
     accounts: &[AccountInfo],
@@ -684,6 +720,51 @@ pub fn mint_res_paper_ix(
         researcher_profile_pda_acc,
         data,
     )?;
+
+    Ok(())
+}
+
+pub fn validate_check_and_assign_reputation_accounts(
+    reputation_checker_acc: &AccountInfo,
+    researcher_profile_acc: &AccountInfo,
+) -> Result<(), DeResearcherError> {
+    if researcher_profile_acc.data_is_empty() {
+        return Err(DeResearcherError::ResearcherProfileNotFound);
+    }
+
+    if !researcher_profile_acc.is_writable {
+        return Err(DeResearcherError::ImmutableAccount);
+    }
+
+    if reputation_checker_acc.key.ne(&REPUTATION_CHECKER_PUBKEY) {
+        return Err(DeResearcherError::InvalidReputationChecker.into());
+    }
+
+    if !reputation_checker_acc.is_signer {
+        return Err(DeResearcherError::InvalidSigner);
+    }
+
+    Ok(())
+}
+
+// Check and assign reputation
+
+pub fn check_and_assign_reputation_ix(
+    accounts: &[AccountInfo],
+    data: CheckAndAssignReputation,
+) -> ProgramResult {
+    let accounts_iter = &mut accounts.iter();
+
+    let reputation_checker_acc = next_account_info(accounts_iter)?;
+
+    let researcher_profile_pda_acc = next_account_info(accounts_iter)?;
+
+    validate_check_and_assign_reputation_accounts(
+        reputation_checker_acc,
+        researcher_profile_pda_acc,
+    )?;
+
+    ResearcherProfile::assign_reputation(researcher_profile_pda_acc, data)?;
 
     Ok(())
 }

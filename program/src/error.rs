@@ -40,6 +40,8 @@ pub enum DeResearcherError {
     PdaPubekyMismatch,
     #[error("Publisher cannot add a peer review to their own paper")]
     PublisherCannotAddPeerReview,
+    #[error("Invalid Reputation checker")]
+    InvalidReputationChecker,
 }
 
 impl From<DeResearcherError> for ProgramError {

@@ -1,12 +1,13 @@
 use borsh::{BorshDeserialize, BorshSerialize};
 use shank::ShankAccount;
-use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, msg, pubkey::Pubkey};
+use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, pubkey::Pubkey};
 
 use crate::{
     error::DeResearcherError,
     instruction::{
-        AddPeerReview, CreateResearchePaper, CreateResearcherProfile, MintResearchPaper,
-        MAX_STRING_SIZE, MIN_APPROVALS_FOR_PUBLISH,
+        AddPeerReview, CheckAndAssignReputation, CreateResearchePaper, CreateResearcherProfile,
+        MintResearchPaper, MAX_REPUTATION, MAX_STRING_SIZE, MIN_APPROVALS_FOR_PUBLISH,
+        MIN_REPUTATION_FOR_PEER_REVIEW,
     },
 };
 
@@ -78,6 +79,34 @@ impl ResearcherProfile {
             meta_data_merkle_root: [0; 64],
             bump: data.pda_bump,
         };
+
+        let mut data_bytes: Vec<u8> = Vec::new();
+
+        researcher_profile.serialize(&mut data_bytes)?;
+
+        researcher_profile_pda_acc
+            .try_borrow_mut_data()?
+            .copy_from_slice(&data_bytes);
+
+        Ok(())
+    }
+
+    pub fn assign_reputation(
+        researcher_profile_pda_acc: &AccountInfo,
+        data: CheckAndAssignReputation,
+    ) -> ProgramResult {
+        let mut researcher_profile =
+            ResearcherProfile::try_from_slice(&researcher_profile_pda_acc.try_borrow_data()?)?;
+
+        researcher_profile.reputation = data.reputation;
+
+        if data.reputation > MAX_REPUTATION {
+            return Err(DeResearcherError::SizeOverflow.into());
+        }
+
+        if data.reputation > MIN_REPUTATION_FOR_PEER_REVIEW {
+            researcher_profile.state = ResearcherProfileState::Approved;
+        }
 
         let mut data_bytes: Vec<u8> = Vec::new();
 

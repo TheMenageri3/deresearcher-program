@@ -394,6 +394,29 @@ createErrorFromNameLookup.set(
 )
 
 /**
+ * InvalidReputationChecker: 'Invalid Reputation checker'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class InvalidReputationCheckerError extends Error {
+  readonly code: number = 0x11
+  readonly name: string = 'InvalidReputationChecker'
+  constructor() {
+    super('Invalid Reputation checker')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, InvalidReputationCheckerError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(0x11, () => new InvalidReputationCheckerError())
+createErrorFromNameLookup.set(
+  'InvalidReputationChecker',
+  () => new InvalidReputationCheckerError()
+)
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

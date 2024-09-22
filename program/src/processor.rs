@@ -4,8 +4,8 @@ use solana_program::{account_info::AccountInfo, entrypoint::ProgramResult, pubke
 use crate::{
     error::DeResearcherError,
     instruction::{
-        add_peer_review_ix, create_research_paper_ix, create_researcher_profile_ix,
-        mint_res_paper_ix, publish_paper_ix, DeResearcherInstruction,
+        add_peer_review_ix, check_and_assign_reputation_ix, create_research_paper_ix,
+        create_researcher_profile_ix, mint_res_paper_ix, publish_paper_ix, DeResearcherInstruction,
     },
 };
 
@@ -35,6 +35,9 @@ impl Processor {
             }
             DeResearcherInstruction::MintResearchPaper(data) => {
                 mint_res_paper_ix(program_id, accounts, data)?
+            }
+            DeResearcherInstruction::CheckAndAssignReputation(data) => {
+                check_and_assign_reputation_ix(accounts, data)?
             }
         }
 
