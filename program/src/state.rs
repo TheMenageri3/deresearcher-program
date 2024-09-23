@@ -106,6 +106,8 @@ impl ResearcherProfile {
 
         if data.reputation > MIN_REPUTATION_FOR_PEER_REVIEW {
             researcher_profile.state = ResearcherProfileState::Approved;
+        } else {
+            researcher_profile.state = ResearcherProfileState::Rejected;
         }
 
         let mut data_bytes: Vec<u8> = Vec::new();
