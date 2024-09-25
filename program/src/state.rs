@@ -47,7 +47,8 @@ pub enum ResearcherProfileState {
 
 #[derive(Debug, BorshDeserialize, BorshSerialize, ShankAccount)]
 pub struct ResearcherProfile {
-    pub address: Pubkey,                 // Researcher's public key 32 bytes
+    pub address: Pubkey,                 // Researcher pda pubkey key 32 bytes
+    pub researcher_pubkey: Pubkey,       // Researcher's public key 32 bytes
     pub name: [u8; 64],                  // Researcher's name 32 bytes
     pub state: ResearcherProfileState,   // Current state of the researcher 1 byte
     pub total_papers_published: u64,     // Total papers published 8 bytes
@@ -60,16 +61,18 @@ pub struct ResearcherProfile {
 
 impl ResearcherProfile {
     pub fn size() -> usize {
-        32 + 64 + 1 + 8 + 8 + 8 + 1 + 64 + 1 //187
+        32 + 32 + 64 + 1 + 8 + 8 + 8 + 1 + 64 + 1 // 211
     }
 
     pub fn create_new(
         researcher_profile_pda_acc: &AccountInfo,
+        researcher_pubkey: &Pubkey,
         data: CreateResearcherProfile,
     ) -> ProgramResult {
         let name_bytes = checked_string_convt_to_64_bytes(&data.name)?;
         let researcher_profile = Self {
             address: *researcher_profile_pda_acc.key,
+            researcher_pubkey: *researcher_pubkey,
             name: name_bytes,
             state: ResearcherProfileState::AwaitingApproval,
             total_papers_published: 0,

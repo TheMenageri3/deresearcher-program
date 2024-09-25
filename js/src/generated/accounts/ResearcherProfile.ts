@@ -5,13 +5,13 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as web3 from '@solana/web3.js'
-import * as beet from '@metaplex-foundation/beet'
-import * as beetSolana from '@metaplex-foundation/beet-solana'
+import * as web3 from "@solana/web3.js";
+import * as beet from "@metaplex-foundation/beet";
+import * as beetSolana from "@metaplex-foundation/beet-solana";
 import {
   ResearcherProfileState,
   researcherProfileStateBeet,
-} from '../types/ResearcherProfileState'
+} from "../types/ResearcherProfileState";
 
 /**
  * Arguments used to create {@link ResearcherProfile}
@@ -19,16 +19,17 @@ import {
  * @category generated
  */
 export type ResearcherProfileArgs = {
-  address: web3.PublicKey
-  name: number[] /* size: 64 */
-  state: ResearcherProfileState
-  totalPapersPublished: beet.bignum
-  totalCitations: beet.bignum
-  totalReviews: beet.bignum
-  reputation: number
-  metaDataMerkleRoot: number[] /* size: 64 */
-  bump: number
-}
+  address: web3.PublicKey;
+  researcherPubkey: web3.PublicKey;
+  name: number[] /* size: 64 */;
+  state: ResearcherProfileState;
+  totalPapersPublished: beet.bignum;
+  totalCitations: beet.bignum;
+  totalReviews: beet.bignum;
+  reputation: number;
+  metaDataMerkleRoot: number[] /* size: 64 */;
+  bump: number;
+};
 /**
  * Holds the data for the {@link ResearcherProfile} Account and provides de/serialization
  * functionality for that data
@@ -39,6 +40,7 @@ export type ResearcherProfileArgs = {
 export class ResearcherProfile implements ResearcherProfileArgs {
   private constructor(
     readonly address: web3.PublicKey,
+    readonly researcherPubkey: web3.PublicKey,
     readonly name: number[] /* size: 64 */,
     readonly state: ResearcherProfileState,
     readonly totalPapersPublished: beet.bignum,
@@ -55,6 +57,7 @@ export class ResearcherProfile implements ResearcherProfileArgs {
   static fromArgs(args: ResearcherProfileArgs) {
     return new ResearcherProfile(
       args.address,
+      args.researcherPubkey,
       args.name,
       args.state,
       args.totalPapersPublished,
@@ -63,7 +66,7 @@ export class ResearcherProfile implements ResearcherProfileArgs {
       args.reputation,
       args.metaDataMerkleRoot,
       args.bump
-    )
+    );
   }
 
   /**
@@ -74,7 +77,7 @@ export class ResearcherProfile implements ResearcherProfileArgs {
     accountInfo: web3.AccountInfo<Buffer>,
     offset = 0
   ): [ResearcherProfile, number] {
-    return ResearcherProfile.deserialize(accountInfo.data, offset)
+    return ResearcherProfile.deserialize(accountInfo.data, offset);
   }
 
   /**
@@ -91,11 +94,11 @@ export class ResearcherProfile implements ResearcherProfileArgs {
     const accountInfo = await connection.getAccountInfo(
       address,
       commitmentOrConfig
-    )
+    );
     if (accountInfo == null) {
-      throw new Error(`Unable to find ResearcherProfile account at ${address}`)
+      throw new Error(`Unable to find ResearcherProfile account at ${address}`);
     }
-    return ResearcherProfile.fromAccountInfo(accountInfo, 0)[0]
+    return ResearcherProfile.fromAccountInfo(accountInfo, 0)[0];
   }
 
   /**
@@ -106,10 +109,10 @@ export class ResearcherProfile implements ResearcherProfileArgs {
    */
   static gpaBuilder(
     programId: web3.PublicKey = new web3.PublicKey(
-      'C5M2JxBaxmsW62BgujPXEPytw65igtUjr6mFbD5pmypM'
+      "C5M2JxBaxmsW62BgujPXEPytw65igtUjr6mFbD5pmypM"
     )
   ) {
-    return beetSolana.GpaBuilder.fromStruct(programId, researcherProfileBeet)
+    return beetSolana.GpaBuilder.fromStruct(programId, researcherProfileBeet);
   }
 
   /**
@@ -117,7 +120,7 @@ export class ResearcherProfile implements ResearcherProfileArgs {
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
   static deserialize(buf: Buffer, offset = 0): [ResearcherProfile, number] {
-    return researcherProfileBeet.deserialize(buf, offset)
+    return researcherProfileBeet.deserialize(buf, offset);
   }
 
   /**
@@ -125,7 +128,7 @@ export class ResearcherProfile implements ResearcherProfileArgs {
    * @returns a tuple of the created Buffer and the offset up to which the buffer was written to store it.
    */
   serialize(): [Buffer, number] {
-    return researcherProfileBeet.serialize(this)
+    return researcherProfileBeet.serialize(this);
   }
 
   /**
@@ -133,7 +136,7 @@ export class ResearcherProfile implements ResearcherProfileArgs {
    * {@link ResearcherProfile}
    */
   static get byteSize() {
-    return researcherProfileBeet.byteSize
+    return researcherProfileBeet.byteSize;
   }
 
   /**
@@ -149,7 +152,7 @@ export class ResearcherProfile implements ResearcherProfileArgs {
     return connection.getMinimumBalanceForRentExemption(
       ResearcherProfile.byteSize,
       commitment
-    )
+    );
   }
 
   /**
@@ -157,7 +160,7 @@ export class ResearcherProfile implements ResearcherProfileArgs {
    * hold {@link ResearcherProfile} data.
    */
   static hasCorrectByteSize(buf: Buffer, offset = 0) {
-    return buf.byteLength - offset === ResearcherProfile.byteSize
+    return buf.byteLength - offset === ResearcherProfile.byteSize;
   }
 
   /**
@@ -167,45 +170,46 @@ export class ResearcherProfile implements ResearcherProfileArgs {
   pretty() {
     return {
       address: this.address.toBase58(),
+      researcherPubkey: this.researcherPubkey.toBase58(),
       name: this.name,
-      state: 'ResearcherProfileState.' + ResearcherProfileState[this.state],
+      state: "ResearcherProfileState." + ResearcherProfileState[this.state],
       totalPapersPublished: (() => {
-        const x = <{ toNumber: () => number }>this.totalPapersPublished
-        if (typeof x.toNumber === 'function') {
+        const x = <{ toNumber: () => number }>this.totalPapersPublished;
+        if (typeof x.toNumber === "function") {
           try {
-            return x.toNumber()
+            return x.toNumber();
           } catch (_) {
-            return x
+            return x;
           }
         }
-        return x
+        return x;
       })(),
       totalCitations: (() => {
-        const x = <{ toNumber: () => number }>this.totalCitations
-        if (typeof x.toNumber === 'function') {
+        const x = <{ toNumber: () => number }>this.totalCitations;
+        if (typeof x.toNumber === "function") {
           try {
-            return x.toNumber()
+            return x.toNumber();
           } catch (_) {
-            return x
+            return x;
           }
         }
-        return x
+        return x;
       })(),
       totalReviews: (() => {
-        const x = <{ toNumber: () => number }>this.totalReviews
-        if (typeof x.toNumber === 'function') {
+        const x = <{ toNumber: () => number }>this.totalReviews;
+        if (typeof x.toNumber === "function") {
           try {
-            return x.toNumber()
+            return x.toNumber();
           } catch (_) {
-            return x
+            return x;
           }
         }
-        return x
+        return x;
       })(),
       reputation: this.reputation,
       metaDataMerkleRoot: this.metaDataMerkleRoot,
       bump: this.bump,
-    }
+    };
   }
 }
 
@@ -218,16 +222,17 @@ export const researcherProfileBeet = new beet.BeetStruct<
   ResearcherProfileArgs
 >(
   [
-    ['address', beetSolana.publicKey],
-    ['name', beet.uniformFixedSizeArray(beet.u8, 64)],
-    ['state', researcherProfileStateBeet],
-    ['totalPapersPublished', beet.u64],
-    ['totalCitations', beet.u64],
-    ['totalReviews', beet.u64],
-    ['reputation', beet.u8],
-    ['metaDataMerkleRoot', beet.uniformFixedSizeArray(beet.u8, 64)],
-    ['bump', beet.u8],
+    ["address", beetSolana.publicKey],
+    ["researcherPubkey", beetSolana.publicKey],
+    ["name", beet.uniformFixedSizeArray(beet.u8, 64)],
+    ["state", researcherProfileStateBeet],
+    ["totalPapersPublished", beet.u64],
+    ["totalCitations", beet.u64],
+    ["totalReviews", beet.u64],
+    ["reputation", beet.u8],
+    ["metaDataMerkleRoot", beet.uniformFixedSizeArray(beet.u8, 64)],
+    ["bump", beet.u8],
   ],
   ResearcherProfile.fromArgs,
-  'ResearcherProfile'
-)
+  "ResearcherProfile"
+);

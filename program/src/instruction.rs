@@ -293,7 +293,7 @@ pub fn create_researcher_profile_ix(
         ]],
     )?;
 
-    ResearcherProfile::create_new(researcher_profile_pda_acc, data)?;
+    ResearcherProfile::create_new(researcher_profile_pda_acc, researcher_acc.key, data)?;
 
     Ok(())
 }

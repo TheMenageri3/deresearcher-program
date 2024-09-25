@@ -5,9 +5,9 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as web3 from '@solana/web3.js'
-import * as beetSolana from '@metaplex-foundation/beet-solana'
-import * as beet from '@metaplex-foundation/beet'
+import * as web3 from "@solana/web3.js";
+import * as beetSolana from "@metaplex-foundation/beet-solana";
+import * as beet from "@metaplex-foundation/beet";
 
 /**
  * Arguments used to create {@link PeerReview}
@@ -15,16 +15,16 @@ import * as beet from '@metaplex-foundation/beet'
  * @category generated
  */
 export type PeerReviewArgs = {
-  address: web3.PublicKey
-  reviewerPubkey: web3.PublicKey
-  paperPubkey: web3.PublicKey
-  qualityOfResearch: number
-  potentialForRealWorldUseCase: number
-  domainKnowledge: number
-  practicalityOfResultObtained: number
-  metaDataMerkleRoot: number[] /* size: 64 */
-  bump: number
-}
+  address: web3.PublicKey;
+  reviewerPubkey: web3.PublicKey;
+  paperPubkey: web3.PublicKey;
+  qualityOfResearch: number;
+  potentialForRealWorldUseCase: number;
+  domainKnowledge: number;
+  practicalityOfResultObtained: number;
+  metaDataMerkleRoot: number[] /* size: 64 */;
+  bump: number;
+};
 /**
  * Holds the data for the {@link PeerReview} Account and provides de/serialization
  * functionality for that data
@@ -59,7 +59,7 @@ export class PeerReview implements PeerReviewArgs {
       args.practicalityOfResultObtained,
       args.metaDataMerkleRoot,
       args.bump
-    )
+    );
   }
 
   /**
@@ -70,7 +70,7 @@ export class PeerReview implements PeerReviewArgs {
     accountInfo: web3.AccountInfo<Buffer>,
     offset = 0
   ): [PeerReview, number] {
-    return PeerReview.deserialize(accountInfo.data, offset)
+    return PeerReview.deserialize(accountInfo.data, offset);
   }
 
   /**
@@ -87,11 +87,11 @@ export class PeerReview implements PeerReviewArgs {
     const accountInfo = await connection.getAccountInfo(
       address,
       commitmentOrConfig
-    )
+    );
     if (accountInfo == null) {
-      throw new Error(`Unable to find PeerReview account at ${address}`)
+      throw new Error(`Unable to find PeerReview account at ${address}`);
     }
-    return PeerReview.fromAccountInfo(accountInfo, 0)[0]
+    return PeerReview.fromAccountInfo(accountInfo, 0)[0];
   }
 
   /**
@@ -102,10 +102,10 @@ export class PeerReview implements PeerReviewArgs {
    */
   static gpaBuilder(
     programId: web3.PublicKey = new web3.PublicKey(
-      'C5M2JxBaxmsW62BgujPXEPytw65igtUjr6mFbD5pmypM'
+      "C5M2JxBaxmsW62BgujPXEPytw65igtUjr6mFbD5pmypM"
     )
   ) {
-    return beetSolana.GpaBuilder.fromStruct(programId, peerReviewBeet)
+    return beetSolana.GpaBuilder.fromStruct(programId, peerReviewBeet);
   }
 
   /**
@@ -113,7 +113,7 @@ export class PeerReview implements PeerReviewArgs {
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
   static deserialize(buf: Buffer, offset = 0): [PeerReview, number] {
-    return peerReviewBeet.deserialize(buf, offset)
+    return peerReviewBeet.deserialize(buf, offset);
   }
 
   /**
@@ -121,7 +121,7 @@ export class PeerReview implements PeerReviewArgs {
    * @returns a tuple of the created Buffer and the offset up to which the buffer was written to store it.
    */
   serialize(): [Buffer, number] {
-    return peerReviewBeet.serialize(this)
+    return peerReviewBeet.serialize(this);
   }
 
   /**
@@ -129,7 +129,7 @@ export class PeerReview implements PeerReviewArgs {
    * {@link PeerReview}
    */
   static get byteSize() {
-    return peerReviewBeet.byteSize
+    return peerReviewBeet.byteSize;
   }
 
   /**
@@ -145,7 +145,7 @@ export class PeerReview implements PeerReviewArgs {
     return connection.getMinimumBalanceForRentExemption(
       PeerReview.byteSize,
       commitment
-    )
+    );
   }
 
   /**
@@ -153,7 +153,7 @@ export class PeerReview implements PeerReviewArgs {
    * hold {@link PeerReview} data.
    */
   static hasCorrectByteSize(buf: Buffer, offset = 0) {
-    return buf.byteLength - offset === PeerReview.byteSize
+    return buf.byteLength - offset === PeerReview.byteSize;
   }
 
   /**
@@ -171,7 +171,7 @@ export class PeerReview implements PeerReviewArgs {
       practicalityOfResultObtained: this.practicalityOfResultObtained,
       metaDataMerkleRoot: this.metaDataMerkleRoot,
       bump: this.bump,
-    }
+    };
   }
 }
 
@@ -181,16 +181,16 @@ export class PeerReview implements PeerReviewArgs {
  */
 export const peerReviewBeet = new beet.BeetStruct<PeerReview, PeerReviewArgs>(
   [
-    ['address', beetSolana.publicKey],
-    ['reviewerPubkey', beetSolana.publicKey],
-    ['paperPubkey', beetSolana.publicKey],
-    ['qualityOfResearch', beet.u8],
-    ['potentialForRealWorldUseCase', beet.u8],
-    ['domainKnowledge', beet.u8],
-    ['practicalityOfResultObtained', beet.u8],
-    ['metaDataMerkleRoot', beet.uniformFixedSizeArray(beet.u8, 64)],
-    ['bump', beet.u8],
+    ["address", beetSolana.publicKey],
+    ["reviewerPubkey", beetSolana.publicKey],
+    ["paperPubkey", beetSolana.publicKey],
+    ["qualityOfResearch", beet.u8],
+    ["potentialForRealWorldUseCase", beet.u8],
+    ["domainKnowledge", beet.u8],
+    ["practicalityOfResultObtained", beet.u8],
+    ["metaDataMerkleRoot", beet.uniformFixedSizeArray(beet.u8, 64)],
+    ["bump", beet.u8],
   ],
   PeerReview.fromArgs,
-  'PeerReview'
-)
+  "PeerReview"
+);

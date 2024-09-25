@@ -292,6 +292,10 @@
             "type": "publicKey"
           },
           {
+            "name": "researcherPubkey",
+            "type": "publicKey"
+          },
+          {
             "name": "name",
             "type": {
               "array": [
