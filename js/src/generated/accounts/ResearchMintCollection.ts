@@ -15,8 +15,9 @@ import * as beet from '@metaplex-foundation/beet'
  * @category generated
  */
 export type ResearchMintCollectionArgs = {
+  address: web3.PublicKey
   readerPubkey: web3.PublicKey
-  dataMerkleRoot: number[] /* size: 64 */
+  metaDataMerkleRoot: number[] /* size: 64 */
   bump: number
 }
 /**
@@ -28,8 +29,9 @@ export type ResearchMintCollectionArgs = {
  */
 export class ResearchMintCollection implements ResearchMintCollectionArgs {
   private constructor(
+    readonly address: web3.PublicKey,
     readonly readerPubkey: web3.PublicKey,
-    readonly dataMerkleRoot: number[] /* size: 64 */,
+    readonly metaDataMerkleRoot: number[] /* size: 64 */,
     readonly bump: number
   ) {}
 
@@ -38,8 +40,9 @@ export class ResearchMintCollection implements ResearchMintCollectionArgs {
    */
   static fromArgs(args: ResearchMintCollectionArgs) {
     return new ResearchMintCollection(
+      args.address,
       args.readerPubkey,
-      args.dataMerkleRoot,
+      args.metaDataMerkleRoot,
       args.bump
     )
   }
@@ -152,8 +155,9 @@ export class ResearchMintCollection implements ResearchMintCollectionArgs {
    */
   pretty() {
     return {
+      address: this.address.toBase58(),
       readerPubkey: this.readerPubkey.toBase58(),
-      dataMerkleRoot: this.dataMerkleRoot,
+      metaDataMerkleRoot: this.metaDataMerkleRoot,
       bump: this.bump,
     }
   }
@@ -168,8 +172,9 @@ export const researchMintCollectionBeet = new beet.BeetStruct<
   ResearchMintCollectionArgs
 >(
   [
+    ['address', beetSolana.publicKey],
     ['readerPubkey', beetSolana.publicKey],
-    ['dataMerkleRoot', beet.uniformFixedSizeArray(beet.u8, 64)],
+    ['metaDataMerkleRoot', beet.uniformFixedSizeArray(beet.u8, 64)],
     ['bump', beet.u8],
   ],
   ResearchMintCollection.fromArgs,

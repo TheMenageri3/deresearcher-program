@@ -461,11 +461,15 @@
         "kind": "struct",
         "fields": [
           {
+            "name": "address",
+            "type": "publicKey"
+          },
+          {
             "name": "readerPubkey",
             "type": "publicKey"
           },
           {
-            "name": "dataMerkleRoot",
+            "name": "metaDataMerkleRoot",
             "type": {
               "array": [
                 "u8",

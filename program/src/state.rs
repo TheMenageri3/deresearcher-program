@@ -125,15 +125,6 @@ impl ResearcherProfile {
     }
 }
 
-// pub struct MetaData {
-//     pub title: String,                      // Title of the research paper
-//     pub authors: Vec<(String, Pubkey)>,     // Authors and their public keys
-//     pub creation_date_timestamp: u64,       // Creation date as a timestamp
-//     pub domain: String,                     // Domain of the research
-//     pub abstract_data: String,              // Abstract text
-//     pub decentralized_storage_link: String, // Link to the PDF in decentralized storage
-// }
-
 #[derive(Debug, BorshDeserialize, BorshSerialize, ShankAccount)]
 pub struct ResearchPaper {
     pub address: Pubkey,                 // Paper's public key 32 bytes
@@ -326,14 +317,15 @@ impl PeerReview {
 
 #[derive(Debug, BorshDeserialize, BorshSerialize, ShankAccount)]
 pub struct ResearchMintCollection {
-    pub reader_pubkey: Pubkey,      // Reader's public key 32 bytes
-    pub data_merkle_root: [u8; 64], // Data merkle root 64 bytes
-    pub bump: u8,                   // Bump seed 1 byte
+    pub address: Pubkey,                 // Mint Collection's public key 32 bytes
+    pub reader_pubkey: Pubkey,           // Reader's public key 32 bytes
+    pub meta_data_merkle_root: [u8; 64], // Data merkle root 64 bytes
+    pub bump: u8,                        // Bump seed 1 byte
 }
 
 impl ResearchMintCollection {
     pub fn size() -> usize {
-        32 + 64 + 1 //97
+        32 + 32 + 64 + 1 //97
     }
 
     pub fn mint_paper(
@@ -346,8 +338,9 @@ impl ResearchMintCollection {
         let merkle_root_bytes = checked_string_convt_to_64_bytes(&data.meta_data_merkle_root)?;
 
         let research_mint_collection = Self {
+            address: *research_mint_collection_pda_acc.key,
             reader_pubkey: *reader_acc.key,
-            data_merkle_root: merkle_root_bytes,
+            meta_data_merkle_root: merkle_root_bytes,
             bump: data.pda_bump,
         };
 
