@@ -5,12 +5,12 @@
  * See: https://github.com/metaplex-foundation/solita
  */
 
-import * as beet from '@metaplex-foundation/beet'
-import * as web3 from '@solana/web3.js'
+import * as beet from "@metaplex-foundation/beet";
+import * as web3 from "@solana/web3.js";
 import {
-  CheckAndAssignReputation,
+  type CheckAndAssignReputation,
   checkAndAssignReputationBeet,
-} from '../types/CheckAndAssignReputation'
+} from "../types/CheckAndAssignReputation";
 
 /**
  * @category Instructions
@@ -18,8 +18,8 @@ import {
  * @category generated
  */
 export type CheckAndAssignReputationInstructionArgs = {
-  checkAndAssignReputation: CheckAndAssignReputation
-}
+  checkAndAssignReputation: CheckAndAssignReputation;
+};
 /**
  * @category Instructions
  * @category CheckAndAssignReputation
@@ -27,15 +27,15 @@ export type CheckAndAssignReputationInstructionArgs = {
  */
 export const CheckAndAssignReputationStruct = new beet.BeetArgsStruct<
   CheckAndAssignReputationInstructionArgs & {
-    instructionDiscriminator: number
+    instructionDiscriminator: number;
   }
 >(
   [
-    ['instructionDiscriminator', beet.u8],
-    ['checkAndAssignReputation', checkAndAssignReputationBeet],
+    ["instructionDiscriminator", beet.u8],
+    ["checkAndAssignReputation", checkAndAssignReputationBeet],
   ],
-  'CheckAndAssignReputationInstructionArgs'
-)
+  "CheckAndAssignReputationInstructionArgs"
+);
 /**
  * Accounts required by the _CheckAndAssignReputation_ instruction
  *
@@ -46,11 +46,11 @@ export const CheckAndAssignReputationStruct = new beet.BeetArgsStruct<
  * @category generated
  */
 export type CheckAndAssignReputationInstructionAccounts = {
-  reputationCheckerAcc: web3.PublicKey
-  researcherProfilePdaAcc: web3.PublicKey
-}
+  reputationCheckerAcc: web3.PublicKey;
+  researcherProfilePdaAcc: web3.PublicKey;
+};
 
-export const checkAndAssignReputationInstructionDiscriminator = 5
+export const checkAndAssignReputationInstructionDiscriminator = 5;
 
 /**
  * Creates a _CheckAndAssignReputation_ instruction.
@@ -65,12 +65,12 @@ export const checkAndAssignReputationInstructionDiscriminator = 5
 export function createCheckAndAssignReputationInstruction(
   accounts: CheckAndAssignReputationInstructionAccounts,
   args: CheckAndAssignReputationInstructionArgs,
-  programId = new web3.PublicKey('C5M2JxBaxmsW62BgujPXEPytw65igtUjr6mFbD5pmypM')
+  programId = new web3.PublicKey("C5M2JxBaxmsW62BgujPXEPytw65igtUjr6mFbD5pmypM")
 ) {
   const [data] = CheckAndAssignReputationStruct.serialize({
     instructionDiscriminator: checkAndAssignReputationInstructionDiscriminator,
     ...args,
-  })
+  });
   const keys: web3.AccountMeta[] = [
     {
       pubkey: accounts.reputationCheckerAcc,
@@ -82,12 +82,12 @@ export function createCheckAndAssignReputationInstruction(
       isWritable: true,
       isSigner: false,
     },
-  ]
+  ];
 
   const ix = new web3.TransactionInstruction({
     programId,
     keys,
     data,
-  })
-  return ix
+  });
+  return ix;
 }
