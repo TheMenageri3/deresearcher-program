@@ -16,8 +16,11 @@ use solana_program::{
 use crate::{
     error::DeResearcherError,
     state::{
-        PeerReview, ResearchMintCollection, ResearchPaper, ResearcherProfile,
-        ResearcherProfileState,
+        PeerReview,
+        ResearchMintCollection,
+        ResearchPaper,
+        ResearcherProfile,
+        // ResearcherProfileState,
     },
 };
 
@@ -484,11 +487,12 @@ fn validate_add_peer_review_accounts(
 }
 
 fn validate_researcher_for_peer_review(
-    researcher_profile: &ResearcherProfile,
+    _researcher_profile: &ResearcherProfile,
 ) -> Result<(), DeResearcherError> {
-    if researcher_profile.state != ResearcherProfileState::Approved {
-        return Err(DeResearcherError::NotAllowedForPeerReview);
-    }
+    // TODO: add this check
+    // if researcher_profile.state != ResearcherProfileState::Approved {
+    //     return Err(DeResearcherError::NotAllowedForPeerReview);
+    // }
 
     Ok(())
 }
@@ -537,10 +541,9 @@ pub fn add_peer_review_ix(
 
     let paper = ResearchPaper::try_from_slice(&paper_pda_acc.data.borrow())?;
 
-    //TODO : Implement this
-    // if paper.creator_pubkey.eq(reviewer_acc.key) {
-    //     return Err(DeResearcherError::PublisherCannotAddPeerReview.into());
-    // }
+    if paper.creator_pubkey.eq(reviewer_acc.key) {
+        return Err(DeResearcherError::PublisherCannotAddPeerReview.into());
+    }
 
     let paper_seeds = vec![
         RESEARCH_PAPER_PDA_SEED,
