@@ -2,7 +2,6 @@ import * as sdk from "../src";
 import fs from "fs";
 import * as solana from "@solana/web3.js";
 import os from "os";
-import { sleep } from "bun";
 
 const getLocalWallet = () => {
   let homeDir = os.homedir();
@@ -15,16 +14,24 @@ const getLocalWallet = () => {
 };
 
 const localWallet = solana.Keypair.generate();
+const wallet2 = solana.Keypair.generate();
 
 const connection = new solana.Connection("http://127.0.0.1:8899");
 
 console.log("Airdropping... for pubkey", localWallet.publicKey.toBase58());
-const txId = await connection.requestAirdrop(
-  localWallet.publicKey,
-  10 * solana.LAMPORTS_PER_SOL
-);
 
-await connection.confirmTransaction(txId, "confirmed");
+const [txId1, txId2] = await Promise.all([
+  connection.requestAirdrop(
+    localWallet.publicKey,
+    10 * solana.LAMPORTS_PER_SOL
+  ),
+  connection.requestAirdrop(wallet2.publicKey, 10 * solana.LAMPORTS_PER_SOL),
+]);
+
+await Promise.all([
+  connection.confirmTransaction(txId1, "confirmed"),
+  connection.confirmTransaction(txId2, "confirmed"),
+]);
 
 describe("Integration tests", () => {
   it("Create a ReseacherProfile account", async () => {
@@ -70,6 +77,51 @@ describe("Integration tests", () => {
       console.log("Transaction signature", txSig);
 
       await connection.confirmTransaction(txSig, "confirmed");
+
+      const seeds2 = [
+        Buffer.from("deres_researcher_profile"),
+        wallet2.publicKey.toBuffer(),
+      ];
+
+      const [researcherProfilePda2, bump2] =
+        solana.PublicKey.findProgramAddressSync(seeds2, sdk.PROGRAM_ID);
+
+      console.log(
+        "Researcher profile pda  2",
+        researcherProfilePda2.toBase58()
+      );
+
+      const ix2 = sdk.createCreateResearcherProfileInstruction(
+        {
+          researcherAcc: wallet2.publicKey,
+          researcherProfilePdaAcc: researcherProfilePda2,
+          systemProgramAcc: solana.SystemProgram.programId,
+        },
+        {
+          createResearcherProfile: {
+            name: "jill",
+            pdaBump: bump2,
+          },
+        }
+      );
+
+      const tx2 = new solana.Transaction().add(ix2);
+
+      const blockhashWithHeight2 = await connection.getLatestBlockhash();
+
+      tx2.recentBlockhash = blockhashWithHeight2.blockhash;
+
+      tx2.feePayer = wallet2.publicKey;
+
+      tx2.sign(wallet2);
+
+      const txSig2 = await connection.sendRawTransaction(tx2.serialize(), {
+        preflightCommitment: "confirmed",
+      });
+
+      console.log("Transaction signature 2", txSig2);
+
+      await connection.confirmTransaction(txSig2, "confirmed");
 
       console.log(txSig);
     } catch (e) {
@@ -208,10 +260,7 @@ describe("Integration tests", () => {
       const checkerWallet = getLocalWallet();
 
       const researcherProfilePda = solana.PublicKey.findProgramAddressSync(
-        [
-          Buffer.from("deres_researcher_profile"),
-          localWallet.publicKey.toBuffer(),
-        ],
+        [Buffer.from("deres_researcher_profile"), wallet2.publicKey.toBuffer()],
         sdk.PROGRAM_ID
       )[0];
 
@@ -267,10 +316,7 @@ describe("Integration tests", () => {
       console.log("Paper pda", paperPda.toBase58());
 
       const researcherProfilePda = solana.PublicKey.findProgramAddressSync(
-        [
-          Buffer.from("deres_researcher_profile"),
-          localWallet.publicKey.toBuffer(),
-        ],
+        [Buffer.from("deres_researcher_profile"), wallet2.publicKey.toBuffer()],
         sdk.PROGRAM_ID
       )[0];
 
@@ -280,7 +326,7 @@ describe("Integration tests", () => {
         [
           Buffer.from("deres_peer_review"),
           paperPda.toBuffer(),
-          localWallet.publicKey.toBuffer(),
+          wallet2.publicKey.toBuffer(),
         ],
         sdk.PROGRAM_ID
       );
@@ -289,7 +335,7 @@ describe("Integration tests", () => {
 
       const ix = sdk.createAddPeerReviewInstruction(
         {
-          reviewerAcc: localWallet.publicKey,
+          reviewerAcc: wallet2.publicKey,
           researcherProfilePdaAcc: researcherProfilePda,
           paperPdaAcc: paperPda,
           peerReviewPdaAcc: peerReviewPda,
@@ -313,9 +359,9 @@ describe("Integration tests", () => {
 
       tx.recentBlockhash = blockhashWithHeight.blockhash;
 
-      tx.feePayer = localWallet.publicKey;
+      tx.feePayer = wallet2.publicKey;
 
-      tx.sign(localWallet);
+      tx.sign(wallet2);
 
       const txSig = await connection.sendRawTransaction(tx.serialize(), {
         preflightCommitment: "confirmed",
