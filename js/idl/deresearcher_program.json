@@ -496,6 +496,10 @@
             "type": "string"
           },
           {
+            "name": "metaDataMerkleRoot",
+            "type": "string"
+          },
+          {
             "name": "pdaBump",
             "type": "u8"
           }

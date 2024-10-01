@@ -56,6 +56,7 @@ describe("Integration tests", () => {
           createResearcherProfile: {
             name: "jack",
             pdaBump: bump,
+            metaDataMerkleRoot: "djagdbjadbjadbjaldb",
           },
         }
       );
@@ -101,6 +102,7 @@ describe("Integration tests", () => {
           createResearcherProfile: {
             name: "jill",
             pdaBump: bump2,
+            metaDataMerkleRoot: "djagdbjadbjadbjaldb",
           },
         }
       );

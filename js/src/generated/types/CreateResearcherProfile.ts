@@ -8,6 +8,7 @@
 import * as beet from '@metaplex-foundation/beet'
 export type CreateResearcherProfile = {
   name: string
+  metaDataMerkleRoot: string
   pdaBump: number
 }
 
@@ -19,6 +20,7 @@ export const createResearcherProfileBeet =
   new beet.FixableBeetArgsStruct<CreateResearcherProfile>(
     [
       ['name', beet.utf8String],
+      ['metaDataMerkleRoot', beet.utf8String],
       ['pdaBump', beet.u8],
     ],
     'CreateResearcherProfile'
