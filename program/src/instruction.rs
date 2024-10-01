@@ -76,6 +76,7 @@ pub fn validate_pda(
 #[derive(BorshSerialize, BorshDeserialize, Debug)]
 pub struct CreateResearcherProfile {
     pub name: String,
+    pub meta_data_merkle_root: String,
     pub pda_bump: u8,
 }
 

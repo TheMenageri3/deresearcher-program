@@ -70,6 +70,7 @@ impl ResearcherProfile {
         data: CreateResearcherProfile,
     ) -> ProgramResult {
         let name_bytes = checked_string_convt_to_64_bytes(&data.name)?;
+        let merkle_root_bytes = checked_string_convt_to_64_bytes(&data.meta_data_merkle_root)?;
         let researcher_profile = Self {
             address: *researcher_profile_pda_acc.key,
             researcher_pubkey: *researcher_pubkey,
@@ -79,7 +80,7 @@ impl ResearcherProfile {
             total_citations: 0,
             total_reviews: 0,
             reputation: 0,
-            meta_data_merkle_root: [0; 64],
+            meta_data_merkle_root: merkle_root_bytes,
             bump: data.pda_bump,
         };
 
