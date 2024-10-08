@@ -56,7 +56,8 @@ describe("Integration tests", () => {
           createResearcherProfile: {
             name: "jack",
             pdaBump: bump,
-            metaDataMerkleRoot: "djagdbjadbjadbjaldb",
+            metaDataMerkleRoot:
+              "0a69c09f7c1eca87a0a6fb108e3aeb1929a2e4bb732a021612730325fd5875b2",
           },
         }
       );
@@ -102,7 +103,8 @@ describe("Integration tests", () => {
           createResearcherProfile: {
             name: "jill",
             pdaBump: bump2,
-            metaDataMerkleRoot: "djagdbjadbjadbjaldb",
+            metaDataMerkleRoot:
+              "0a69c09f7c1eca87a0a6fb108e3aeb1929a2e4bb732a021612730325fd5875b2",
           },
         }
       );
@@ -161,11 +163,12 @@ describe("Integration tests", () => {
 
   it("Create a Research paper", async () => {
     try {
-      const paperContentHash = "48y2ehidkhdkhadahkhadhiakhdiaydh"; //32 bytes
+      const paperContentHash =
+        "0a69c09f7c1eca87a0a6fb108e3aeb1929a2e4bb732a021612730325fd5875b2"; //32 bytes
 
       const seeds = [
         Buffer.from("deres_research_paper"),
-        Buffer.from(paperContentHash),
+        Buffer.from(paperContentHash.slice(0, 32)),
         localWallet.publicKey.toBuffer(),
       ];
 
@@ -197,7 +200,8 @@ describe("Integration tests", () => {
           createResearchePaper: {
             paperContentHash: paperContentHash,
             accessFee: 100,
-            metaDataMerkleRoot: "djagdbjadbjadbjaldb",
+            metaDataMerkleRoot:
+              "0a69c09f7c1eca87a0a6fb108e3aeb1929a2e4bb732a021612730325fd5875b2",
             pdaBump: bump,
           },
         }
@@ -227,11 +231,12 @@ describe("Integration tests", () => {
 
   it("fetch the research paper", async () => {
     try {
-      const paperContentHash = "48y2ehidkhdkhadahkhadhiakhdiaydh"; //32 bytes
+      const paperContentHash =
+        "0a69c09f7c1eca87a0a6fb108e3aeb1929a2e4bb732a021612730325fd5875b2"; //32 bytes
 
       const seeds = [
         Buffer.from("deres_research_paper"),
-        Buffer.from(paperContentHash),
+        Buffer.from(paperContentHash.slice(0, 32)),
         localWallet.publicKey.toBuffer(),
       ];
 
@@ -302,11 +307,12 @@ describe("Integration tests", () => {
 
   it("Add a peer review", async () => {
     try {
-      const paperContentHash = "48y2ehidkhdkhadahkhadhiakhdiaydh"; //32 bytes
+      const paperContentHash =
+        "0a69c09f7c1eca87a0a6fb108e3aeb1929a2e4bb732a021612730325fd5875b2"; //32 bytes
 
       const seeds = [
         Buffer.from("deres_research_paper"),
-        Buffer.from(paperContentHash),
+        Buffer.from(paperContentHash.slice(0, 32)),
         localWallet.publicKey.toBuffer(),
       ];
 
@@ -349,7 +355,8 @@ describe("Integration tests", () => {
             potentialForRealWorldUseCase: 100,
             practicalityOfResultObtained: 100,
             domainKnowledge: 100,
-            metaDataMerkleRoot: "djagdbjadbjadbjaldb",
+            metaDataMerkleRoot:
+              "0a69c09f7c1eca87a0a6fb108e3aeb1929a2e4bb732a021612730325fd5875b2",
             pdaBump: bump2,
           },
         }
@@ -379,11 +386,12 @@ describe("Integration tests", () => {
 
   it("Publish a research paper", async () => {
     try {
-      const paperContentHash = "48y2ehidkhdkhadahkhadhiakhdiaydh"; //32 bytes
+      const paperContentHash =
+        "0a69c09f7c1eca87a0a6fb108e3aeb1929a2e4bb732a021612730325fd5875b2"; //32 bytes
 
       const seeds = [
         Buffer.from("deres_research_paper"),
-        Buffer.from(paperContentHash),
+        Buffer.from(paperContentHash.slice(0, 32)),
         localWallet.publicKey.toBuffer(),
       ];
 
@@ -430,11 +438,12 @@ describe("Integration tests", () => {
 
   it("Mint a research paper", async () => {
     try {
-      const paperContentHash = "48y2ehidkhdkhadahkhadhiakhdiaydh"; //32 bytes
+      const paperContentHash =
+        "0a69c09f7c1eca87a0a6fb108e3aeb1929a2e4bb732a021612730325fd5875b2"; //32 bytes
 
       const seeds = [
         Buffer.from("deres_research_paper"),
-        Buffer.from(paperContentHash),
+        Buffer.from(paperContentHash.slice(0, 32)),
         localWallet.publicKey.toBuffer(),
       ];
 
@@ -480,7 +489,8 @@ describe("Integration tests", () => {
         },
         {
           mintResearchPaper: {
-            metaDataMerkleRoot: "djagdbjadbjadbjaldb",
+            metaDataMerkleRoot:
+              "0a69c09f7c1eca87a0a6fb108e3aeb1929a2e4bb732a021612730325fd5875b2",
             pdaBump: bump2,
           },
         }
@@ -510,11 +520,12 @@ describe("Integration tests", () => {
 
   it("fetch the minted research paper", async () => {
     try {
-      const paperContentHash = "48y2ehidkhdkhadahkhadhiakhdiaydh"; //32 bytes
+      const paperContentHash =
+        "0a69c09f7c1eca87a0a6fb108e3aeb1929a2e4bb732a021612730325fd5875b2"; //32 bytes
 
       const seeds = [
         Buffer.from("deres_research_paper"),
-        Buffer.from(paperContentHash),
+        Buffer.from(paperContentHash.slice(0, 32)),
         localWallet.publicKey.toBuffer(),
       ];
 
