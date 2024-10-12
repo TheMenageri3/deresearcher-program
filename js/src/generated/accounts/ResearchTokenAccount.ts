@@ -10,57 +10,57 @@ import * as beetSolana from '@metaplex-foundation/beet-solana'
 import * as beet from '@metaplex-foundation/beet'
 
 /**
- * Arguments used to create {@link ResearchMintCollection}
+ * Arguments used to create {@link ResearchTokenAccount}
  * @category Accounts
  * @category generated
  */
-export type ResearchMintCollectionArgs = {
+export type ResearchTokenAccountArgs = {
   address: web3.PublicKey
-  readerPubkey: web3.PublicKey
-  metaDataMerkleRoot: number[] /* size: 64 */
+  paperPubkey: web3.PublicKey
+  researcherPubkey: web3.PublicKey
   bump: number
 }
 /**
- * Holds the data for the {@link ResearchMintCollection} Account and provides de/serialization
+ * Holds the data for the {@link ResearchTokenAccount} Account and provides de/serialization
  * functionality for that data
  *
  * @category Accounts
  * @category generated
  */
-export class ResearchMintCollection implements ResearchMintCollectionArgs {
+export class ResearchTokenAccount implements ResearchTokenAccountArgs {
   private constructor(
     readonly address: web3.PublicKey,
-    readonly readerPubkey: web3.PublicKey,
-    readonly metaDataMerkleRoot: number[] /* size: 64 */,
+    readonly paperPubkey: web3.PublicKey,
+    readonly researcherPubkey: web3.PublicKey,
     readonly bump: number
   ) {}
 
   /**
-   * Creates a {@link ResearchMintCollection} instance from the provided args.
+   * Creates a {@link ResearchTokenAccount} instance from the provided args.
    */
-  static fromArgs(args: ResearchMintCollectionArgs) {
-    return new ResearchMintCollection(
+  static fromArgs(args: ResearchTokenAccountArgs) {
+    return new ResearchTokenAccount(
       args.address,
-      args.readerPubkey,
-      args.metaDataMerkleRoot,
+      args.paperPubkey,
+      args.researcherPubkey,
       args.bump
     )
   }
 
   /**
-   * Deserializes the {@link ResearchMintCollection} from the data of the provided {@link web3.AccountInfo}.
+   * Deserializes the {@link ResearchTokenAccount} from the data of the provided {@link web3.AccountInfo}.
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
   static fromAccountInfo(
     accountInfo: web3.AccountInfo<Buffer>,
     offset = 0
-  ): [ResearchMintCollection, number] {
-    return ResearchMintCollection.deserialize(accountInfo.data, offset)
+  ): [ResearchTokenAccount, number] {
+    return ResearchTokenAccount.deserialize(accountInfo.data, offset)
   }
 
   /**
    * Retrieves the account info from the provided address and deserializes
-   * the {@link ResearchMintCollection} from its data.
+   * the {@link ResearchTokenAccount} from its data.
    *
    * @throws Error if no account info is found at the address or if deserialization fails
    */
@@ -68,17 +68,17 @@ export class ResearchMintCollection implements ResearchMintCollectionArgs {
     connection: web3.Connection,
     address: web3.PublicKey,
     commitmentOrConfig?: web3.Commitment | web3.GetAccountInfoConfig
-  ): Promise<ResearchMintCollection> {
+  ): Promise<ResearchTokenAccount> {
     const accountInfo = await connection.getAccountInfo(
       address,
       commitmentOrConfig
     )
     if (accountInfo == null) {
       throw new Error(
-        `Unable to find ResearchMintCollection account at ${address}`
+        `Unable to find ResearchTokenAccount account at ${address}`
       )
     }
-    return ResearchMintCollection.fromAccountInfo(accountInfo, 0)[0]
+    return ResearchTokenAccount.fromAccountInfo(accountInfo, 0)[0]
   }
 
   /**
@@ -89,45 +89,39 @@ export class ResearchMintCollection implements ResearchMintCollectionArgs {
    */
   static gpaBuilder(
     programId: web3.PublicKey = new web3.PublicKey(
-      'C5M2JxBaxmsW62BgujPXEPytw65igtUjr6mFbD5pmypM'
+      'BdtzNv4J5DSCA52xK6KLyKG5qorajuwfmJV2WivPkRsW'
     )
   ) {
-    return beetSolana.GpaBuilder.fromStruct(
-      programId,
-      researchMintCollectionBeet
-    )
+    return beetSolana.GpaBuilder.fromStruct(programId, researchTokenAccountBeet)
   }
 
   /**
-   * Deserializes the {@link ResearchMintCollection} from the provided data Buffer.
+   * Deserializes the {@link ResearchTokenAccount} from the provided data Buffer.
    * @returns a tuple of the account data and the offset up to which the buffer was read to obtain it.
    */
-  static deserialize(
-    buf: Buffer,
-    offset = 0
-  ): [ResearchMintCollection, number] {
-    return researchMintCollectionBeet.deserialize(buf, offset)
+  static deserialize(buf: Buffer, offset = 0): [ResearchTokenAccount, number] {
+    return researchTokenAccountBeet.deserialize(buf, offset)
   }
 
   /**
-   * Serializes the {@link ResearchMintCollection} into a Buffer.
+   * Serializes the {@link ResearchTokenAccount} into a Buffer.
    * @returns a tuple of the created Buffer and the offset up to which the buffer was written to store it.
    */
   serialize(): [Buffer, number] {
-    return researchMintCollectionBeet.serialize(this)
+    return researchTokenAccountBeet.serialize(this)
   }
 
   /**
    * Returns the byteSize of a {@link Buffer} holding the serialized data of
-   * {@link ResearchMintCollection}
+   * {@link ResearchTokenAccount}
    */
   static get byteSize() {
-    return researchMintCollectionBeet.byteSize
+    return researchTokenAccountBeet.byteSize
   }
 
   /**
    * Fetches the minimum balance needed to exempt an account holding
-   * {@link ResearchMintCollection} data from rent
+   * {@link ResearchTokenAccount} data from rent
    *
    * @param connection used to retrieve the rent exemption information
    */
@@ -136,28 +130,28 @@ export class ResearchMintCollection implements ResearchMintCollectionArgs {
     commitment?: web3.Commitment
   ): Promise<number> {
     return connection.getMinimumBalanceForRentExemption(
-      ResearchMintCollection.byteSize,
+      ResearchTokenAccount.byteSize,
       commitment
     )
   }
 
   /**
    * Determines if the provided {@link Buffer} has the correct byte size to
-   * hold {@link ResearchMintCollection} data.
+   * hold {@link ResearchTokenAccount} data.
    */
   static hasCorrectByteSize(buf: Buffer, offset = 0) {
-    return buf.byteLength - offset === ResearchMintCollection.byteSize
+    return buf.byteLength - offset === ResearchTokenAccount.byteSize
   }
 
   /**
-   * Returns a readable version of {@link ResearchMintCollection} properties
+   * Returns a readable version of {@link ResearchTokenAccount} properties
    * and can be used to convert to JSON and/or logging
    */
   pretty() {
     return {
       address: this.address.toBase58(),
-      readerPubkey: this.readerPubkey.toBase58(),
-      metaDataMerkleRoot: this.metaDataMerkleRoot,
+      paperPubkey: this.paperPubkey.toBase58(),
+      researcherPubkey: this.researcherPubkey.toBase58(),
       bump: this.bump,
     }
   }
@@ -167,16 +161,16 @@ export class ResearchMintCollection implements ResearchMintCollectionArgs {
  * @category Accounts
  * @category generated
  */
-export const researchMintCollectionBeet = new beet.BeetStruct<
-  ResearchMintCollection,
-  ResearchMintCollectionArgs
+export const researchTokenAccountBeet = new beet.BeetStruct<
+  ResearchTokenAccount,
+  ResearchTokenAccountArgs
 >(
   [
     ['address', beetSolana.publicKey],
-    ['readerPubkey', beetSolana.publicKey],
-    ['metaDataMerkleRoot', beet.uniformFixedSizeArray(beet.u8, 64)],
+    ['paperPubkey', beetSolana.publicKey],
+    ['researcherPubkey', beetSolana.publicKey],
     ['bump', beet.u8],
   ],
-  ResearchMintCollection.fromArgs,
-  'ResearchMintCollection'
+  ResearchTokenAccount.fromArgs,
+  'ResearchTokenAccount'
 )

@@ -417,6 +417,32 @@ createErrorFromNameLookup.set(
 )
 
 /**
+ * ResearchTokenAccountAlreadyExists: 'Research Token account already exists'
+ *
+ * @category Errors
+ * @category generated
+ */
+export class ResearchTokenAccountAlreadyExistsError extends Error {
+  readonly code: number = 0x12
+  readonly name: string = 'ResearchTokenAccountAlreadyExists'
+  constructor() {
+    super('Research Token account already exists')
+    if (typeof Error.captureStackTrace === 'function') {
+      Error.captureStackTrace(this, ResearchTokenAccountAlreadyExistsError)
+    }
+  }
+}
+
+createErrorFromCodeLookup.set(
+  0x12,
+  () => new ResearchTokenAccountAlreadyExistsError()
+)
+createErrorFromNameLookup.set(
+  'ResearchTokenAccountAlreadyExists',
+  () => new ResearchTokenAccountAlreadyExistsError()
+)
+
+/**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors
  * @category generated

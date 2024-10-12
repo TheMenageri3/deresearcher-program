@@ -186,11 +186,11 @@
       "name": "MintResearchPaper",
       "accounts": [
         {
-          "name": "readerAcc",
+          "name": "researcherAcc",
           "isMut": true,
           "isSigner": true,
           "docs": [
-            "Reader's account"
+            "Researcher's account"
           ]
         },
         {
@@ -202,11 +202,11 @@
           ]
         },
         {
-          "name": "researchMintCollectionPdaAcc",
+          "name": "researchTokenPdaAccount",
           "isMut": true,
           "isSigner": false,
           "docs": [
-            "Research mint collection PDA account"
+            "Research token PDA account"
           ]
         },
         {
@@ -456,7 +456,7 @@
       }
     },
     {
-      "name": "ResearchMintCollection",
+      "name": "ResearchTokenAccount",
       "type": {
         "kind": "struct",
         "fields": [
@@ -465,17 +465,12 @@
             "type": "publicKey"
           },
           {
-            "name": "readerPubkey",
+            "name": "paperPubkey",
             "type": "publicKey"
           },
           {
-            "name": "metaDataMerkleRoot",
-            "type": {
-              "array": [
-                "u8",
-                64
-              ]
-            }
+            "name": "researcherPubkey",
+            "type": "publicKey"
           },
           {
             "name": "bump",
@@ -579,10 +574,6 @@
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "metaDataMerkleRoot",
-            "type": "string"
-          },
           {
             "name": "pdaBump",
             "type": "u8"
@@ -736,11 +727,16 @@
       "code": 17,
       "name": "InvalidReputationChecker",
       "msg": "Invalid Reputation checker"
+    },
+    {
+      "code": 18,
+      "name": "ResearchTokenAccountAlreadyExists",
+      "msg": "Research Token account already exists"
     }
   ],
   "metadata": {
     "origin": "shank",
-    "address": "C5M2JxBaxmsW62BgujPXEPytw65igtUjr6mFbD5pmypM",
+    "address": "BdtzNv4J5DSCA52xK6KLyKG5qorajuwfmJV2WivPkRsW",
     "binaryVersion": "0.4.2",
     "libVersion": "0.4.2"
   }

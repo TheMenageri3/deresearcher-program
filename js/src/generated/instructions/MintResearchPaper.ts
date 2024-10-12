@@ -25,7 +25,7 @@ export type MintResearchPaperInstructionArgs = {
  * @category MintResearchPaper
  * @category generated
  */
-export const MintResearchPaperStruct = new beet.FixableBeetArgsStruct<
+export const MintResearchPaperStruct = new beet.BeetArgsStruct<
   MintResearchPaperInstructionArgs & {
     instructionDiscriminator: number;
   }
@@ -39,9 +39,9 @@ export const MintResearchPaperStruct = new beet.FixableBeetArgsStruct<
 /**
  * Accounts required by the _MintResearchPaper_ instruction
  *
- * @property [_writable_, **signer**] readerAcc
+ * @property [_writable_, **signer**] researcherAcc
  * @property [_writable_] researcherProfilePdaAcc
- * @property [_writable_] researchMintCollectionPdaAcc
+ * @property [_writable_] researchTokenPdaAccount
  * @property [_writable_] paperPdaAcc
  * @property [_writable_] feeReceiverAcc
  * @property [] systemProgramAcc
@@ -50,9 +50,9 @@ export const MintResearchPaperStruct = new beet.FixableBeetArgsStruct<
  * @category generated
  */
 export type MintResearchPaperInstructionAccounts = {
-  readerAcc: web3.PublicKey;
+  researcherAcc: web3.PublicKey;
   researcherProfilePdaAcc: web3.PublicKey;
-  researchMintCollectionPdaAcc: web3.PublicKey;
+  researchTokenPdaAccount: web3.PublicKey;
   paperPdaAcc: web3.PublicKey;
   feeReceiverAcc: web3.PublicKey;
   systemProgramAcc: web3.PublicKey;
@@ -73,7 +73,7 @@ export const mintResearchPaperInstructionDiscriminator = 4;
 export function createMintResearchPaperInstruction(
   accounts: MintResearchPaperInstructionAccounts,
   args: MintResearchPaperInstructionArgs,
-  programId = new web3.PublicKey("C5M2JxBaxmsW62BgujPXEPytw65igtUjr6mFbD5pmypM")
+  programId = new web3.PublicKey("BdtzNv4J5DSCA52xK6KLyKG5qorajuwfmJV2WivPkRsW")
 ) {
   const [data] = MintResearchPaperStruct.serialize({
     instructionDiscriminator: mintResearchPaperInstructionDiscriminator,
@@ -81,7 +81,7 @@ export function createMintResearchPaperInstruction(
   });
   const keys: web3.AccountMeta[] = [
     {
-      pubkey: accounts.readerAcc,
+      pubkey: accounts.researcherAcc,
       isWritable: true,
       isSigner: true,
     },
@@ -91,7 +91,7 @@ export function createMintResearchPaperInstruction(
       isSigner: false,
     },
     {
-      pubkey: accounts.researchMintCollectionPdaAcc,
+      pubkey: accounts.researchTokenPdaAccount,
       isWritable: true,
       isSigner: false,
     },

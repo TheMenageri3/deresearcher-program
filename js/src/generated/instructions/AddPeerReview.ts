@@ -68,7 +68,7 @@ export const addPeerReviewInstructionDiscriminator = 3;
 export function createAddPeerReviewInstruction(
   accounts: AddPeerReviewInstructionAccounts,
   args: AddPeerReviewInstructionArgs,
-  programId = new web3.PublicKey("C5M2JxBaxmsW62BgujPXEPytw65igtUjr6mFbD5pmypM")
+  programId = new web3.PublicKey("BdtzNv4J5DSCA52xK6KLyKG5qorajuwfmJV2WivPkRsW")
 ) {
   const [data] = AddPeerReviewStruct.serialize({
     instructionDiscriminator: addPeerReviewInstructionDiscriminator,

@@ -7,7 +7,6 @@
 
 import * as beet from '@metaplex-foundation/beet'
 export type MintResearchPaper = {
-  metaDataMerkleRoot: string
   pdaBump: number
 }
 
@@ -15,11 +14,7 @@ export type MintResearchPaper = {
  * @category userTypes
  * @category generated
  */
-export const mintResearchPaperBeet =
-  new beet.FixableBeetArgsStruct<MintResearchPaper>(
-    [
-      ['metaDataMerkleRoot', beet.utf8String],
-      ['pdaBump', beet.u8],
-    ],
-    'MintResearchPaper'
-  )
+export const mintResearchPaperBeet = new beet.BeetArgsStruct<MintResearchPaper>(
+  [['pdaBump', beet.u8]],
+  'MintResearchPaper'
+)

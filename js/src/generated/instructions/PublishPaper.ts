@@ -62,7 +62,7 @@ export const publishPaperInstructionDiscriminator = 2;
 export function createPublishPaperInstruction(
   accounts: PublishPaperInstructionAccounts,
   args: PublishPaperInstructionArgs,
-  programId = new web3.PublicKey("C5M2JxBaxmsW62BgujPXEPytw65igtUjr6mFbD5pmypM")
+  programId = new web3.PublicKey("BdtzNv4J5DSCA52xK6KLyKG5qorajuwfmJV2WivPkRsW")
 ) {
   const [data] = PublishPaperStruct.serialize({
     instructionDiscriminator: publishPaperInstructionDiscriminator,

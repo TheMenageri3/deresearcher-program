@@ -464,33 +464,32 @@ describe("Integration tests", () => {
 
       console.log("Researcher profile pda", researcherProfilePda.toBase58());
 
-      const [researchMintCollectionPda, bump2] =
+      const [ResearchTokenAccountPda, bump2] =
         solana.PublicKey.findProgramAddressSync(
           [
-            Buffer.from("deres_mint_collection"),
+            Buffer.from("deres_token_account"),
+            paperPda.toBuffer(),
             localWallet.publicKey.toBuffer(),
           ],
           sdk.PROGRAM_ID
         );
 
       console.log(
-        "Research mint collection pda",
-        researchMintCollectionPda.toBase58()
+        "Research token account pda",
+        ResearchTokenAccountPda.toBase58()
       );
 
       const ix = sdk.createMintResearchPaperInstruction(
         {
-          readerAcc: localWallet.publicKey,
+          researcherAcc: localWallet.publicKey,
           researcherProfilePdaAcc: researcherProfilePda,
-          researchMintCollectionPdaAcc: researchMintCollectionPda,
+          researchTokenPdaAccount: ResearchTokenAccountPda,
           paperPdaAcc: paperPda,
           feeReceiverAcc: localWallet.publicKey,
           systemProgramAcc: solana.SystemProgram.programId,
         },
         {
           mintResearchPaper: {
-            metaDataMerkleRoot:
-              "0a69c09f7c1eca87a0a6fb108e3aeb1929a2e4bb732a021612730325fd5875b2",
             pdaBump: bump2,
           },
         }
@@ -549,21 +548,22 @@ describe("Integration tests", () => {
 
       console.log("Minted research paper", acc.pretty());
 
-      const researchMintCollectionPda = solana.PublicKey.findProgramAddressSync(
+      const ResearchTokenAccountPda = solana.PublicKey.findProgramAddressSync(
         [
-          Buffer.from("deres_mint_collection"),
+          Buffer.from("deres_token_account"),
+          paperPda.toBuffer(),
           localWallet.publicKey.toBuffer(),
         ],
         sdk.PROGRAM_ID
       )[0];
 
       console.log(
-        "Research mint collection pda",
-        researchMintCollectionPda.toBase58()
+        "Research token account pda",
+        ResearchTokenAccountPda.toBase58()
       );
 
       const acc_info2 = await connection.getAccountInfo(
-        researchMintCollectionPda,
+        ResearchTokenAccountPda,
         "confirmed"
       );
 
@@ -573,7 +573,7 @@ describe("Integration tests", () => {
       }
 
       const [acc2, _id2] =
-        sdk.accountProviders.ResearchMintCollection.fromAccountInfo(acc_info2);
+        sdk.accountProviders.ResearchTokenAccount.fromAccountInfo(acc_info2);
 
       console.log(acc2.pretty());
     } catch (e) {
