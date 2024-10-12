@@ -42,6 +42,8 @@ pub enum DeResearcherError {
     PublisherCannotAddPeerReview,
     #[error("Invalid Reputation checker")]
     InvalidReputationChecker,
+    #[error("Research Token account already exists")]
+    ResearchTokenAccountAlreadyExists,
 }
 
 impl From<DeResearcherError> for ProgramError {

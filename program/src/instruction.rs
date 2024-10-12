@@ -15,19 +15,13 @@ use solana_program::{
 
 use crate::{
     error::DeResearcherError,
-    state::{
-        PeerReview,
-        ResearchMintCollection,
-        ResearchPaper,
-        ResearcherProfile,
-        // ResearcherProfileState,
-    },
+    state::{PeerReview, ResearchPaper, ResearchTokenAccount, ResearcherProfile},
 };
 
 const RESEARCH_PAPER_PDA_SEED: &[u8] = b"deres_research_paper";
 const PEER_REVIEW_PDA_SEED: &[u8] = b"deres_peer_review";
 
-const RESEARCH_MINT_COLLECTION_PDA_SEED: &[u8] = b"deres_mint_collection";
+const RESEARCH_TOKEN_ACCOUNT_PDA_SEED: &[u8] = b"deres_token_account";
 
 const RESEARCHER_PROFILE_PDA_SEED: &[u8] = b"deres_researcher_profile";
 
@@ -105,7 +99,6 @@ pub struct AddPeerReview {
 
 #[derive(BorshSerialize, BorshDeserialize, Debug)]
 pub struct MintResearchPaper {
-    pub meta_data_merkle_root: String,
     pub pda_bump: u8,
 }
 
@@ -188,7 +181,13 @@ pub enum DeResearcherInstruction {
     )]
     #[account(4, name = "system_program_acc", desc = "System program account")]
     AddPeerReview(AddPeerReview),
-    #[account(0, writable, signer, name = "reader_acc", desc = "Reader's account")]
+    #[account(
+        0,
+        writable,
+        signer,
+        name = "researcher_acc",
+        desc = "Researcher's account"
+    )]
     #[account(
         1,
         writable,
@@ -198,8 +197,8 @@ pub enum DeResearcherInstruction {
     #[account(
         2,
         writable,
-        name = "research_mint_collection_pda_acc",
-        desc = "Research mint collection PDA account"
+        name = "research_token_pda_account",
+        desc = "Research token PDA account"
     )]
     #[account(
         3,
@@ -614,13 +613,13 @@ pub fn add_peer_review_ix(
 }
 
 fn validate_mint_res_paper_accounts(
-    reader_acc: &AccountInfo,
+    researcher_acc: &AccountInfo,
     researcher_profile_pda_acc: &AccountInfo,
     paper_pda_acc: &AccountInfo,
     fee_receiver_acc: &AccountInfo,
     paper: &ResearchPaper,
 ) -> Result<(), DeResearcherError> {
-    if !reader_acc.is_signer {
+    if !researcher_acc.is_signer {
         return Err(DeResearcherError::InvalidSigner);
     }
 
@@ -649,22 +648,25 @@ pub fn mint_res_paper_ix(
     msg!("Instruction: MintResearchPaper");
     let accounts_iter = &mut accounts.iter();
 
-    let reader_acc = next_account_info(accounts_iter)?;
+    let researcher_acc = next_account_info(accounts_iter)?;
 
     let researcher_profile_pda_acc = next_account_info(accounts_iter)?;
 
-    let research_mint_collection_pda_acc = next_account_info(accounts_iter)?;
+    let research_token_pda_acc = next_account_info(accounts_iter)?;
 
     let paper_pda_acc = next_account_info(accounts_iter)?;
 
-    let research_mint_collection_pda = research_mint_collection_pda_acc.key;
+    let research_token_pda = research_token_pda_acc.key;
 
-    let res_mint_collection_seeds =
-        vec![RESEARCH_MINT_COLLECTION_PDA_SEED, reader_acc.key.as_ref()];
+    let res_token_acc_seeds = vec![
+        RESEARCH_TOKEN_ACCOUNT_PDA_SEED,
+        paper_pda_acc.key.as_ref(),
+        researcher_acc.key.as_ref(),
+    ];
 
     validate_pda(
-        res_mint_collection_seeds,
-        research_mint_collection_pda,
+        res_token_acc_seeds,
+        research_token_pda,
         data.pda_bump,
         program_id,
     )?;
@@ -674,52 +676,55 @@ pub fn mint_res_paper_ix(
     let paper = ResearchPaper::try_from_slice(&paper_pda_acc.data.borrow())?;
 
     validate_mint_res_paper_accounts(
-        reader_acc,
+        researcher_acc,
         researcher_profile_pda_acc,
         paper_pda_acc,
         fee_receiver_acc,
         &paper,
     )?;
 
-    if research_mint_collection_pda_acc.data_is_empty() {
-        let create_res_mint_collection_ix = system_instruction::create_account(
-            reader_acc.key,
-            research_mint_collection_pda_acc.key,
-            Rent::get()?.minimum_balance(ResearchMintCollection::size() as usize),
-            ResearchMintCollection::size() as u64,
-            program_id,
-        );
-
-        let system_program_acc = next_account_info(accounts_iter)?;
-        invoke_signed(
-            &create_res_mint_collection_ix,
-            &[
-                reader_acc.clone(),
-                research_mint_collection_pda_acc.clone(),
-                system_program_acc.clone(),
-            ],
-            &[&[
-                RESEARCH_MINT_COLLECTION_PDA_SEED,
-                reader_acc.key.as_ref(),
-                &[data.pda_bump],
-            ]],
-        )?;
+    if !research_token_pda_acc.data_is_empty() {
+        return Err(DeResearcherError::ResearchTokenAccountAlreadyExists.into());
     }
+
+    let create_res_token_acc_ix = system_instruction::create_account(
+        researcher_acc.key,
+        research_token_pda,
+        Rent::get()?.minimum_balance(ResearchTokenAccount::size() as usize),
+        ResearchTokenAccount::size() as u64,
+        program_id,
+    );
+
+    let system_program_acc = next_account_info(accounts_iter)?;
+    invoke_signed(
+        &create_res_token_acc_ix,
+        &[
+            researcher_acc.clone(),
+            research_token_pda_acc.clone(),
+            system_program_acc.clone(),
+        ],
+        &[&[
+            RESEARCH_TOKEN_ACCOUNT_PDA_SEED,
+            paper_pda_acc.key.as_ref(),
+            researcher_acc.key.as_ref(),
+            &[data.pda_bump],
+        ]],
+    )?;
 
     if paper.access_fee > 0 {
         invoke(
             &system_instruction::transfer(
-                reader_acc.key,
+                researcher_acc.key,
                 &paper.creator_pubkey,
                 paper.access_fee as u64,
             ),
-            &[reader_acc.clone(), fee_receiver_acc.clone()],
+            &[researcher_acc.clone(), fee_receiver_acc.clone()],
         )?;
     }
 
-    ResearchMintCollection::mint_paper(
-        research_mint_collection_pda_acc,
-        reader_acc,
+    ResearchTokenAccount::mint_paper(
+        research_token_pda_acc,
+        researcher_acc,
         paper_pda_acc,
         researcher_profile_pda_acc,
         data,
